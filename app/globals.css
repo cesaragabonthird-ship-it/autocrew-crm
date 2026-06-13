@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+* { letter-spacing: -0.02em; }
+html,body { font-family: 'DM Sans', system-ui, sans-serif; }
+body { @apply bg-gray-50 text-gray-900; }
+@layer utilities {
+  .scrollbar-hide { -ms-overflow-style:none; scrollbar-width:none; }
+  .scrollbar-hide::-webkit-scrollbar { display:none; }
+}
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { @apply bg-transparent; }
+::-webkit-scrollbar-thumb { @apply bg-gray-300 rounded-full; }

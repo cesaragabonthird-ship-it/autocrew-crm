@@ -1,0 +1,97 @@
+
+> autocrew-crm@1.0.0 dev
+> next dev
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.41:3000
+- Environments: .env.local
+✓ Ready in 358ms
+
+ GET /dashboard/invoices?new=shop 200 in 2.8s (next.js: 2.6s, application-code: 201ms)
+ GET /dashboard/invoices 200 in 46ms (next.js: 5ms, application-code: 41ms)
+ POST /api/apps-script 200 in 2.5s (next.js: 231ms, application-code: 2.3s)
+ POST /api/apps-script 200 in 2.7s (next.js: 224ms, application-code: 2.4s)
+ POST /api/apps-script 200 in 2.7s (next.js: 225ms, application-code: 2.4s)
+ POST /api/apps-script 200 in 2.7s (next.js: 237ms, application-code: 2.5s)
+ POST /api/apps-script 200 in 2.8s (next.js: 208ms, application-code: 2.6s)
+ POST /api/apps-script 200 in 1777ms (next.js: 6ms, application-code: 1771ms)
+ GET /dashboard 200 in 278ms (next.js: 259ms, application-code: 19ms)
+ POST /api/apps-script 200 in 3.6s (next.js: 3ms, application-code: 3.6s)
+ POST /api/apps-script 200 in 3.6s (next.js: 4ms, application-code: 3.6s)
+ POST /api/apps-script 200 in 4.0s (next.js: 8ms, application-code: 4.0s)
+ GET /dashboard/invoices?new=shop 200 in 18ms (next.js: 2ms, application-code: 16ms)
+ POST /api/apps-script 200 in 1755ms (next.js: 9ms, application-code: 1746ms)
+ POST /api/apps-script 200 in 1823ms (next.js: 2ms, application-code: 1821ms)
+ POST /api/apps-script 200 in 1980ms (next.js: 4ms, application-code: 1976ms)
+ POST /api/apps-script 200 in 2.2s (next.js: 15ms, application-code: 2.1s)
+ GET /dashboard 200 in 14ms (next.js: 1680µs, application-code: 13ms)
+ GET /dashboard/invoices 200 in 15ms (next.js: 1740µs, application-code: 13ms)
+ POST /api/apps-script 200 in 3.1s (next.js: 2ms, application-code: 3.1s)
+ POST /api/apps-script 200 in 2.1s (next.js: 2ms, application-code: 2.1s)
+ GET /dashboard 200 in 13ms (next.js: 2ms, application-code: 11ms)
+ POST /api/apps-script 200 in 2.2s (next.js: 7ms, application-code: 2.2s)
+ POST /api/apps-script 200 in 2.4s (next.js: 2ms, application-code: 2.4s)
+ POST /api/apps-script 200 in 2.8s (next.js: 5ms, application-code: 2.8s)
+ GET /dashboard/invoices?new=shop 200 in 17ms (next.js: 1747µs, application-code: 15ms)
+ POST /api/apps-script 200 in 4.5s (next.js: 6ms, application-code: 4.5s)
+ POST /api/apps-script 200 in 1602ms (next.js: 1973µs, application-code: 1600ms)
+ POST /api/apps-script 200 in 1512ms (next.js: 1597µs, application-code: 1510ms)
+ POST /api/apps-script 200 in 1769ms (next.js: 5ms, application-code: 1764ms)
+ POST /api/apps-script 200 in 2.2s (next.js: 9ms, application-code: 2.2s)
+ POST /api/apps-script 200 in 3.2s (next.js: 1675µs, application-code: 3.2s)
+ POST /api/apps-script 200 in 3.6s (next.js: 6ms, application-code: 3.6s)
+ GET /r/smashq/kiosk 404 in 273ms (next.js: 236ms, application-code: 37ms)
+ GET /r/smashq/cashier 404 in 37ms (next.js: 4ms, application-code: 33ms)
+ GET /? 200 in 1157ms (next.js: 1084ms, application-code: 73ms)
+⚠ Blocked cross-origin request to Next.js dev resource /_next/webpack-hmr from "192.168.1.41".
+Cross-origin access to Next.js dev resources is blocked by default for safety.
+
+To allow this host in development, add it to "allowedDevOrigins" in next.config.js and restart the dev server:
+
+// next.config.js
+module.exports = {
+  allowedDevOrigins: ['192.168.1.41'],
+}
+
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ GET /dashboard 200 in 48ms (next.js: 3ms, application-code: 44ms)
+ GET / 200 in 29ms (next.js: 1868µs, application-code: 27ms)
+ POST /api/apps-script 200 in 2.9s (next.js: 1437µs, application-code: 2.9s)
+ GET / 200 in 275ms (next.js: 84ms, application-code: 191ms)
+ GET /r/smashq/cashier 404 in 282ms (next.js: 108ms, application-code: 174ms)
+ GET /r/smashq/kiosk 404 in 281ms (next.js: 123ms, application-code: 158ms)
+ GET /r/smashq/cashier 404 in 216ms (next.js: 6ms, application-code: 210ms)
+ GET /r/smashq/kiosk 404 in 103ms (next.js: 12ms, application-code: 91ms)
+⚠ Fast Refresh had to perform a full reload when ./lib/api.js changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./lib/api.js changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./lib/api.js changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+✓ Compiled in 41ms
+ GET /r/smashq/cashier 404 in 219ms (next.js: 142ms, application-code: 77ms)
+ GET / 200 in 422ms (next.js: 72ms, application-code: 350ms)
+ GET /r/smashq/kiosk 404 in 422ms (next.js: 52ms, application-code: 370ms)
+ GET /r/smashq/cashier 404 in 342ms (next.js: 112ms, application-code: 230ms)
+ GET / 200 in 438ms (next.js: 71ms, application-code: 367ms)
+ GET /r/smashq/kiosk 404 in 138ms (next.js: 27ms, application-code: 111ms)
+ GET /r/smashq/cashier 404 in 117ms (next.js: 37ms, application-code: 80ms)
+ POST /api/apps-script 200 in 2.0s (next.js: 19ms, application-code: 2.0s)
+✓ Compiled in 99ms
+ GET / 200 in 380ms (next.js: 46ms, application-code: 334ms)
+ GET /r/smashq/cashier 404 in 209ms (next.js: 23ms, application-code: 186ms)
+ GET /r/smashq/kiosk 404 in 349ms (next.js: 78ms, application-code: 271ms)
+ GET / 200 in 251ms (next.js: 11ms, application-code: 241ms)
+ GET /r/smashq/cashier 404 in 376ms (next.js: 64ms, application-code: 312ms)
+ GET / 200 in 246ms (next.js: 7ms, application-code: 239ms)
+ GET /r/smashq/kiosk 404 in 250ms (next.js: 137ms, application-code: 112ms)
+ GET /r/smashq/cashier 404 in 313ms (next.js: 39ms, application-code: 274ms)
+ GET /r/smashq/kiosk 404 in 151ms (next.js: 7ms, application-code: 144ms)
+ POST /api/apps-script 200 in 2.6s (next.js: 18ms, application-code: 2.6s)
+ POST /api/apps-script 200 in 4.3s (next.js: 1509µs, application-code: 4.3s)
+ POST /api/apps-script 200 in 1736ms (next.js: 1887µs, application-code: 1734ms)
+ POST /api/apps-script 200 in 2.1s (next.js: 2ms, application-code: 2.1s)
+✓ Compiled in 98ms
+ GET / 200 in 169ms (next.js: 53ms, application-code: 117ms)
+ GET /r/smashq/kiosk 404 in 231ms (next.js: 13ms, application-code: 217ms)
+ GET /r/smashq/cashier 404 in 229ms (next.js: 33ms, application-code: 196ms)
+ GET /r/smashq/kiosk 404 in 155ms (next.js: 9ms, application-code: 146ms)
+ GET /r/smashq/cashier 404 in 154ms (next.js: 114ms, application-code: 40ms)

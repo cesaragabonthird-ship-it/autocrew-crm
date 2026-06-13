@@ -1,0 +1,26 @@
+{
+  "name": "autocrew-crm",
+  "version": "1.0.0",
+  "description": "AutoCrew CRM — Convex Backend",
+  "scripts": {
+    "dev":   "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "react":            "^18.2.0",
+    "react-dom":        "^18.2.0",
+    "next":             "^14.0.0",
+    "firebase":         "^10.7.0",
+    "lucide-react":     "^0.294.0",
+    "convex":           "^1.9.0",
+    "convex/react":     "^1.9.0"
+  },
+  "devDependencies": {
+    "tailwindcss":  "^3.3.0",
+    "postcss":      "^8.4.32",
+    "autoprefixer": "^10.4.16",
+    "typescript":   "^5.0.0",
+    "@types/react": "^18.0.0"
+  }
+}
