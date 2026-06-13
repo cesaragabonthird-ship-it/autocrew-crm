@@ -62,9 +62,15 @@ export default function DashboardLayout({ children }) {
   const router                  = useRouter();
   const pathname                = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
   const [branches, setBranches] = useState([]);
   const branchRef = useRef(null);
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   // Fetch available branches for the tenant
   useEffect(() => {
@@ -118,9 +124,36 @@ export default function DashboardLayout({ children }) {
 
   return (
     <AuthGuard>
-      <div className="flex h-screen overflow-hidden bg-gray-50">
+      <div className="flex flex-col md:flex-row h-screen overflow-hidden bg-gray-50">
+        {/* Mobile Header Bar */}
+        <header className="flex md:hidden items-center justify-between h-14 bg-[#111827] px-4 border-b border-white/10 z-30 flex-shrink-0">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="text-gray-400 hover:text-white p-1 rounded-lg focus:outline-none"
+          >
+            <Menu size={20} />
+          </button>
+          <Link href="/dashboard" className="flex items-center justify-center">
+            <img src="/og-image-white.png" alt="AutoCrew" className="h-8 object-contain" />
+          </Link>
+          <div className="w-8" />
+        </header>
+
+        {/* Backdrop overlay for mobile sidebar */}
+        {mobileOpen && (
+          <div
+            className="fixed inset-0 bg-black/45 z-40 md:hidden transition-opacity duration-200"
+            onClick={() => setMobileOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
-        <aside className={`${collapsed?'w-[60px]':'w-56'} bg-[#111827] flex flex-col flex-shrink-0 transition-all duration-200 overflow-hidden`}>
+        <aside className={`
+          fixed inset-y-0 left-0 z-50 flex flex-col overflow-hidden bg-[#111827] transition-all duration-200
+          md:static md:translate-x-0
+          ${collapsed ? 'md:w-[60px]' : 'md:w-56'}
+          ${mobileOpen ? 'w-56 translate-x-0' : 'w-56 -translate-x-full md:w-56 md:translate-x-0'}
+        `}>
           {/* Logo */}
           <div className="flex items-center h-14 px-3 border-b border-white/10 flex-shrink-0 relative">
             {!collapsed && (
@@ -134,10 +167,14 @@ export default function DashboardLayout({ children }) {
               </Link>
             )}
             {!collapsed && (
-              <button onClick={()=>setCollapsed(true)} className="absolute right-3 text-gray-500 hover:text-white transition p-1 rounded flex-shrink-0">
+              <button onClick={()=>setCollapsed(true)} className="absolute right-3 text-gray-500 hover:text-white transition p-1 rounded flex-shrink-0 md:block hidden">
                 <ChevronLeft size={15}/>
               </button>
             )}
+            {/* Mobile Close Button */}
+            <button onClick={() => setMobileOpen(false)} className="absolute right-3 text-gray-400 hover:text-white transition p-1 rounded flex-shrink-0 md:hidden block">
+              <ChevronLeft size={18}/>
+            </button>
           </div>
           {collapsed && (
             <button onClick={()=>setCollapsed(false)} className="flex justify-center py-2.5 text-gray-500 hover:text-white transition border-b border-white/10">

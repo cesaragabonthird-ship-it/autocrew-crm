@@ -1,15 +1,22 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { useUser } from '@/lib/UserContext';
 import { useAuthCompat as useAuth } from '@/components/AuthProvider';
 import AccessDenied from '@/components/AccessDenied';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Shield, Users, CreditCard, BellRing, ChevronRight, Settings, LogOut } from 'lucide-react';
+import { Shield, Users, CreditCard, BellRing, ChevronRight, Settings, LogOut, Menu, ChevronLeft } from 'lucide-react';
 
 export default function AdminLayout({ children }) {
   const { logout } = useAuth();
   const { clerkUser, loading } = useUser();
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   if (loading) {
     return (
@@ -37,15 +44,46 @@ export default function AdminLayout({ children }) {
   ];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex flex-col md:flex-row h-screen overflow-hidden bg-gray-50">
+      {/* Mobile Header Bar */}
+      <header className="flex md:hidden items-center justify-between h-14 bg-[#111827] px-4 border-b border-white/10 z-30 flex-shrink-0">
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="text-gray-400 hover:text-white p-1 rounded-lg focus:outline-none"
+        >
+          <Menu size={20} />
+        </button>
+        <Link href="/admin" className="flex items-center justify-center">
+          <img src="/og-image-white.png" alt="AutoCrew" className="h-6 object-contain" />
+          <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider bg-amber-500/10 px-2 py-0.5 rounded ml-1.5">Owner</span>
+        </Link>
+        <div className="w-8" />
+      </header>
+
+      {/* Backdrop overlay for mobile sidebar */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/45 z-40 md:hidden transition-opacity duration-200"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-[#111827] flex flex-col flex-shrink-0 overflow-hidden text-gray-300">
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-[#111827] flex flex-col flex-shrink-0 overflow-hidden text-gray-300 transition-transform duration-200 ease-in-out
+        md:static md:translate-x-0
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
         {/* Title */}
-        <div className="flex items-center gap-2.5 h-14 px-4 border-b border-white/10 flex-shrink-0">
+        <div className="flex items-center justify-between h-14 px-4 border-b border-white/10 flex-shrink-0 relative">
           <Link href="/admin" className="flex items-center gap-2 min-w-0">
             <img src="/og-image-white.png" alt="AutoCrew" className="h-6 object-contain" />
             <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider bg-amber-500/10 px-2 py-0.5 rounded ml-1.5">Owner</span>
           </Link>
+          {/* Mobile Close Button */}
+          <button onClick={() => setMobileOpen(false)} className="absolute right-3 text-gray-400 hover:text-white transition p-1 rounded flex-shrink-0 md:hidden block">
+            <ChevronLeft size={18}/>
+          </button>
         </div>
 
         {/* Navigation */}
