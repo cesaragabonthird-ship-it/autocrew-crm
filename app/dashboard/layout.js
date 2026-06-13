@@ -58,7 +58,7 @@ function getFilteredNav(role) {
 
 export default function DashboardLayout({ children }) {
   const { logout }              = useAuth();
-  const { profile, isAdmin, subStatus, trialDaysLeft, billingDaysLeft } = useUser();
+  const { profile, isAdmin, isSystemAdmin, subStatus, trialDaysLeft, billingDaysLeft } = useUser();
   const router                  = useRouter();
   const pathname                = usePathname();
   const [collapsed, setCollapsed] = useState(false);
@@ -217,7 +217,7 @@ export default function DashboardLayout({ children }) {
 
           {/* Footer */}
           <div className="p-2 border-t border-white/10 flex-shrink-0">
-            {isAdmin && !collapsed && (
+            {isSystemAdmin && !collapsed && (
               <Link href="/admin" className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-amber-400 hover:bg-amber-500/20 transition text-sm mb-1 font-medium">
                 <Shield size={14}/> Admin Panel
               </Link>
