@@ -20,10 +20,15 @@ import { ConvexHttpClient } from 'convex/browser';
  *   Copy Signing Secret → CLERK_WEBHOOK_SECRET in .env.local
  */
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
 export async function POST(req: Request) {
+  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+  if (!convexUrl) {
+    return new Response('Missing NEXT_PUBLIC_CONVEX_URL', { status: 500 });
+  }
+  const convex = new ConvexHttpClient(convexUrl);
+
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
+
   if (!WEBHOOK_SECRET) {
     return new Response('Missing CLERK_WEBHOOK_SECRET', { status: 500 });
   }
