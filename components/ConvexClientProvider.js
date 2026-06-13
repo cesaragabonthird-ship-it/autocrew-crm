@@ -3,7 +3,8 @@ import { ConvexReactClient } from 'convex/react';
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
 import { useAuth } from '@clerk/nextjs';
 
-const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL);
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || 'https://placeholder.convex.cloud';
+const convex = new ConvexReactClient(convexUrl);
 
 // Prevent Next.js Turbopack dev server from showing the full-page red overlay
 // for handled Convex validation errors and plan limit restrictions.
