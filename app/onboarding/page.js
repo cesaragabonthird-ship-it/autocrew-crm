@@ -89,13 +89,10 @@ export default function OnboardingPage() {
       <div className="max-w-4xl mx-auto">
         {/* Logo */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-3 mb-3">
-            <div className="bg-orange-500 p-2.5 rounded-2xl shadow-lg">
-              <Car size={26} className="text-white"/>
-            </div>
-            <span className="text-2xl font-bold text-white">AutoCrew</span>
+          <div className="inline-flex items-center justify-center">
+            <img src="/og-image-white.png" alt="AutoCrew" className="h-[84px] object-contain" />
           </div>
-          <p className="text-white/50 text-sm">Welcome, {user?.firstName}! Let&apos;s set up your shop.</p>
+          <p className="text-white/50 text-sm mt-3">Welcome, {user?.firstName}! Let&apos;s set up your shop.</p>
         </div>
 
         {/* Steps */}
