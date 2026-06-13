@@ -1,9 +1,10 @@
 'use client';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuthCompat as useAuth } from '@/components/AuthProvider';
 import { useUser } from '@/lib/UserContext';
-import { LogOut, Wrench, Bell, Lock } from 'lucide-react';
+import { LogOut, Wrench, Bell, Lock, Clock } from 'lucide-react';
 
 export default function InstallerLayout({ children }) {
   const { user, logout } = useAuth();
@@ -60,6 +61,9 @@ export default function InstallerLayout({ children }) {
               <p className="text-[10px] text-slate-400 mt-0.5 font-semibold uppercase font-mono">{profile.branchName || profile.branch || ''}</p>
             </div>
           )}
+          <Link href="/portal" className="p-2 hover:bg-slate-800 rounded-lg transition text-slate-400 hover:text-slate-200 cursor-pointer flex items-center justify-center" title="Time Clock Portal">
+            <Clock size={17}/>
+          </Link>
           <button onClick={handleLogout} className="p-2 hover:bg-slate-800 rounded-lg transition text-slate-400 hover:text-slate-200 cursor-pointer">
             <LogOut size={17}/>
           </button>
