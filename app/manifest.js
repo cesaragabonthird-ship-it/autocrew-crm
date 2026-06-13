@@ -3,7 +3,7 @@ export default function manifest() {
     name: 'AutoCrew CRM',
     short_name: 'AutoCrew',
     description: 'AutoCrew Installer & Seller Portal',
-    start_url: '/portal',
+    start_url: '/',
     display: 'standalone',
     orientation: 'portrait',
     background_color: '#f8fafc',
