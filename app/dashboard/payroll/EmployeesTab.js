@@ -58,6 +58,11 @@ export default function EmployeesTab() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [employees.length]);
 
   const unlinkedTeamMembers = team.filter(member => {
     return !employees.some(emp => 
@@ -209,17 +214,21 @@ export default function EmployeesTab() {
   };
 
 
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(employees.length / itemsPerPage);
+  const paginatedEmployees = employees.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+
   return (
     <div>
       {/* Subheader */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Payroll Employee Settings</h2>
           <p className="text-xs text-gray-500">Configure pay bases, taxable benefits, and exemptions for tax and contributions.</p>
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-4 py-2 rounded-xl transition"
+          className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition w-full sm:w-auto"
         >
           <Plus size={14} /> Add Employee
         </button>
@@ -230,77 +239,149 @@ export default function EmployeesTab() {
           <div className="animate-spin h-6 w-6 border-b-2 border-orange-500 rounded-full" />
         </div>
       ) : (
-        <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
-          <table className="w-full text-sm text-left">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Emp ID</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Name</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Role / Dept</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Branch</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Pay Basis</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {employees.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
-                    No payroll employee configurations found. Add one to get started!
-                  </td>
-                </tr>
-              ) : (
-                employees.map(emp => (
-                  <tr key={emp.id || emp._id} className="hover:bg-gray-50 transition">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-500">{emp.employeeId}</td>
-                    <td className="px-4 py-3">
-                      <p className="font-semibold text-gray-900">{emp.name}</p>
-                      <p className="text-xs text-gray-500">{emp.email}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-gray-900">{emp.role}</p>
-                      <p className="text-xs text-gray-500">{emp.department} • {emp.employmentType}</p>
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">{emp.branch}</td>
-                    <td className="px-4 py-3">
-                      {emp.payType === 'monthly' && (
-                        <p className="font-semibold text-gray-900">₱{emp.basicSalary.toLocaleString()} <span className="text-xs text-gray-500 font-normal">/mo</span></p>
-                      )}
-                      {emp.payType === 'daily' && (
-                        <p className="font-semibold text-gray-900">₱{emp.dailyRate.toLocaleString()} <span className="text-xs text-gray-500 font-normal">/day</span></p>
-                      )}
-                      {emp.payType === 'hourly' && (
-                        <p className="font-semibold text-gray-900">₱{emp.hourlyRate.toLocaleString()} <span className="text-xs text-gray-500 font-normal">/hr</span></p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
+        <div className="space-y-4">
+          {employees.length === 0 ? (
+            <div className="text-center py-12 text-gray-500 border border-gray-200 rounded-xl bg-white text-sm">
+              No payroll employee configurations found. Add one to get started!
+            </div>
+          ) : (
+            <>
+              {/* Desktop table view */}
+              <div className="hidden md:block border border-gray-200 rounded-xl overflow-hidden bg-white">
+                <table className="w-full text-sm text-left">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Emp ID</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Name</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Role / Dept</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Branch</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Pay Basis</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {paginatedEmployees.map(emp => (
+                      <tr key={emp.id || emp._id} className="hover:bg-gray-50 transition">
+                        <td className="px-4 py-3 font-mono text-xs text-gray-500">{emp.employeeId}</td>
+                        <td className="px-4 py-3">
+                          <p className="font-semibold text-gray-900">{emp.name}</p>
+                          <p className="text-xs text-gray-500">{emp.email}</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          <p className="text-gray-900">{emp.role}</p>
+                          <p className="text-xs text-gray-500">{emp.department} • {emp.employmentType}</p>
+                        </td>
+                        <td className="px-4 py-3 text-gray-700">{emp.branch}</td>
+                        <td className="px-4 py-3">
+                          {emp.payType === 'monthly' && (
+                            <p className="font-semibold text-gray-900">₱{emp.basicSalary.toLocaleString()} <span className="text-xs text-gray-500 font-normal">/mo</span></p>
+                          )}
+                          {emp.payType === 'daily' && (
+                            <p className="font-semibold text-gray-900">₱{emp.dailyRate.toLocaleString()} <span className="text-xs text-gray-500 font-normal">/day</span></p>
+                          )}
+                          {emp.payType === 'hourly' && (
+                            <p className="font-semibold text-gray-900">₱{emp.hourlyRate.toLocaleString()} <span className="text-xs text-gray-500 font-normal">/hr</span></p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                            emp.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {emp.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => openEdit(emp)}
+                            className="p-1.5 hover:bg-gray-100 rounded-md text-gray-500 hover:text-gray-900 inline-block"
+                          >
+                            <Edit2 size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile card view */}
+              <div className="md:hidden space-y-4">
+                {paginatedEmployees.map(emp => (
+                  <div key={emp.id || emp._id} className="bg-white border border-gray-200 rounded-xl p-4 space-y-3 shadow-sm">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="font-mono text-xs text-gray-500">{emp.employeeId}</span>
+                        <h3 className="font-semibold text-gray-900 mt-0.5">{emp.name}</h3>
+                        <p className="text-xs text-gray-500">{emp.email}</p>
+                      </div>
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                         emp.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
                       }`}>
                         {emp.status}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100 text-xs">
+                      <div>
+                        <p className="text-gray-500 font-medium">Role / Dept</p>
+                        <p className="font-semibold text-gray-900 mt-0.5">{emp.role}</p>
+                        <p className="text-gray-500 mt-0.5">{emp.department} • {emp.employmentType}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 font-medium">Branch & Pay Rate</p>
+                        <p className="font-semibold text-gray-900 mt-0.5">{emp.branch}</p>
+                        <p className="font-bold text-orange-600 mt-0.5">
+                          {emp.payType === 'monthly' && `₱${emp.basicSalary.toLocaleString()} /mo`}
+                          {emp.payType === 'daily' && `₱${emp.dailyRate.toLocaleString()} /day`}
+                          {emp.payType === 'hourly' && `₱${emp.hourlyRate.toLocaleString()} /hr`}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end pt-2 border-t border-gray-100">
                       <button
                         onClick={() => openEdit(emp)}
-                        className="p-1.5 hover:bg-gray-100 rounded-md text-gray-500 hover:text-gray-900 inline-block"
+                        className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-900 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition"
                       >
-                        <Edit2 size={14} />
+                        <Edit2 size={12} /> Edit Settings
                       </button>
-                    </td>
-                  </tr>
-                ))
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm">
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-xs text-gray-500 font-medium">
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  >
+                    Next
+                  </button>
+                </div>
               )}
-            </tbody>
-          </table>
+            </>
+          )}
         </div>
       )}
 
       {/* Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 max-h-[92vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-4 md:p-6 max-h-[92vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl font-bold text-gray-900">{editing ? 'Edit Employee Payroll' : 'Add Employee to Payroll'}</h2>
               <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600">
@@ -308,7 +389,7 @@ export default function EmployeesTab() {
               </button>
             </div>
             <form onSubmit={handleSave}>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Employee ID (Auto-incremented)</label>
                   <input disabled required type="text" value={form.employeeId} className={`${f} bg-gray-100 cursor-not-allowed`} />
@@ -378,7 +459,7 @@ export default function EmployeesTab() {
               {/* Pay Rates */}
               <div className="border-t border-gray-100 pt-4 mb-4">
                 <h3 className="text-xs font-bold text-gray-700 uppercase mb-3">Pay Config</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Pay Type</label>
                     <select value={form.payType} onChange={e => setForm(p => ({ ...p, payType: e.target.value }))} className={f}>
@@ -444,16 +525,18 @@ export default function EmployeesTab() {
                 </div>
                 <div className="space-y-2">
                   {form.allowances.map((al, idx) => (
-                    <div key={idx} className="flex gap-2 items-center">
-                      <input type="text" required placeholder="Allowance Name" value={al.name} onChange={e => handleAllowanceChange(idx, 'name', e.target.value)} className={f + " flex-1"} />
-                      <input type="number" required placeholder="Amount (₱)" min="0" value={al.amount} onChange={e => handleAllowanceChange(idx, 'amount', e.target.value)} className={f + " w-32"} />
-                      <label className="flex items-center gap-1.5 text-xs text-gray-600 px-2">
-                        <input type="checkbox" checked={al.taxable} onChange={e => handleAllowanceChange(idx, 'taxable', e.target.checked)} className="rounded text-orange-500 focus:ring-orange-500 h-4 w-4" />
-                        Taxable
-                      </label>
-                      <button type="button" onClick={() => handleRemoveAllowance(idx)} className="text-gray-400 hover:text-red-500 px-1">
-                        <X size={16} />
-                      </button>
+                    <div key={idx} className="flex flex-col sm:flex-row gap-2 items-start sm:items-center bg-gray-50 sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-gray-100 sm:border-0">
+                      <input type="text" required placeholder="Allowance Name" value={al.name} onChange={e => handleAllowanceChange(idx, 'name', e.target.value)} className={f + " w-full sm:flex-1"} />
+                      <input type="number" required placeholder="Amount (₱)" min="0" value={al.amount} onChange={e => handleAllowanceChange(idx, 'amount', e.target.value)} className={f + " w-full sm:w-32"} />
+                      <div className="flex items-center justify-between w-full sm:w-auto gap-4 px-1 mt-1 sm:mt-0">
+                        <label className="flex items-center gap-1.5 text-xs text-gray-600">
+                          <input type="checkbox" checked={al.taxable} onChange={e => handleAllowanceChange(idx, 'taxable', e.target.checked)} className="rounded text-orange-500 focus:ring-orange-500 h-4 w-4" />
+                          Taxable
+                        </label>
+                        <button type="button" onClick={() => handleRemoveAllowance(idx)} className="text-gray-400 hover:text-red-500 p-1 rounded-lg hover:bg-gray-100 sm:hover:bg-transparent transition">
+                          <X size={16} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                   {form.allowances.length === 0 && (
@@ -486,20 +569,20 @@ export default function EmployeesTab() {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold py-2.5 rounded-xl transition disabled:opacity-50"
-                >
-                  {saving ? 'Saving…' : editing ? 'Update Settings' : 'Add Employee'}
-                </button>
+              <div className="flex flex-col-reverse sm:flex-row gap-3">
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-2.5 rounded-xl transition"
+                  className="w-full sm:flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-2.5 rounded-xl transition"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="w-full sm:flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold py-2.5 rounded-xl transition disabled:opacity-50"
+                >
+                  {saving ? 'Saving…' : editing ? 'Update Settings' : 'Add Employee'}
                 </button>
               </div>
             </form>

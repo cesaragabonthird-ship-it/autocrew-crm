@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { jobsAPI, customersAPI, teamAPI, productsAPI, branchesAPI } from '@/lib/convex-api';
 import { useUser } from '@/lib/UserContext';
 import { JOB_STATUSES, JOB_TYPES, PAYMENT_METHODS } from '@/lib/constants';
-import { Plus, Search, X, ClipboardList, Edit2, Trash2, ChevronRight, Car, User, Clock, DollarSign, Wrench, CheckCircle2, UserCheck } from 'lucide-react';
+import { Plus, Search, X, ClipboardList, Edit2, Trash2, ChevronRight, Car, User, Clock, DollarSign, Wrench, CheckCircle2, UserCheck, ChevronDown } from 'lucide-react';
 
 const MOCK_JOBS = [
   { id:'j1', jobNumber:'JO-0001', customer:'Carlos Reyes',   phone:'09171234567', vehicle:'2022 Toyota Hilux (ABC-1234)',  type:'Audio Installation',  description:'Install Pioneer AVH-Z9200BT + speakers', status:'in_progress', assignedTo:'Alex Cruz',   branch:'Main',  scheduledDate:'2024-05-08', amount:12500, parts:[{name:'Pioneer AVH-Z9200BT',qty:1,price:8000},{name:'Speaker Set',qty:1,price:2500}], labor:2000, notes:'Customer wants clean install', createdAt:'2024-05-07' },
@@ -11,10 +11,6 @@ const MOCK_JOBS = [
   { id:'j3', jobNumber:'JO-0003', customer:'Juan Dela Cruz', phone:'09191234569', vehicle:'2023 Ford Ranger (GHI-9012)',   type:'Alarm Installation',  description:'Viper 5906V alarm with remote start',   status:'pending',     assignedTo:'',            branch:'Main',  scheduledDate:'2024-05-10', amount:7800,  parts:[{name:'Viper 5906V Alarm',qty:1,price:4000}],                           labor:3800, notes:'', createdAt:'2024-05-08' },
   { id:'j4', jobNumber:'JO-0004', customer:'Ana Garcia',     phone:'09201234570', vehicle:'2020 Mitsubishi Strada (MNO-7890)',type:'LED Lighting',    description:'LED H4 headlight upgrade',               status:'completed',   assignedTo:'Alex Cruz',   branch:'North', scheduledDate:'2024-05-07', amount:3800,  parts:[{name:'LED H4 Bulb Set',qty:1,price:680}],                              labor:3120, notes:'Done and tested', createdAt:'2024-05-06' },
   { id:'j5', jobNumber:'JO-0005', customer:'Roberto Lim',    phone:'09211234571', vehicle:'2022 Suzuki Jimny (PQR-1234)', type:'GPS Tracker Installation',description:'Garmin GPS tracker hidden install',  status:'assigned',    assignedTo:'Mario Diaz',  branch:'Main',  scheduledDate:'2024-05-09', amount:9500,  parts:[{name:'Garmin GPS 65s',qty:1,price:8500}],                              labor:1000, notes:'', createdAt:'2024-05-08' },
-];
-
-const MOCK_TECHNICIANS = [
-  {id:'t1',name:'Alex Cruz'},{id:'t2',name:'Ben Ramos'},{id:'t3',name:'Mario Diaz'},{id:'t4',name:'Carlo Santos'},
 ];
 
 const EMPTY = { customer:'', phone:'', vehicle:'', vehiclePlate:'', type:'', description:'', status:'pending', assignedTo:'', branch:'Main', scheduledDate:'', parts:[{name:'',qty:1,price:''}], labor:'', notes:'' };
@@ -190,93 +186,166 @@ export default function JobOrdersPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Job Orders</h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            {jobs.filter(j=>j.status==='pending').length} pending · {jobs.filter(j=>j.status==='assigned').length} assigned · {jobs.filter(j=>j.status==='in_progress').length} in progress
-          </p>
+    <div className="p-4 md:p-8">
+      {/* Sticky Header & Filter Container */}
+      <div className="sticky top-0 bg-gray-50/95 backdrop-blur-sm z-10 -mx-4 md:-mx-8 px-4 md:px-8 pt-2 pb-4 border-b border-gray-200/60 mb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Job Orders</h1>
+            <p className="text-gray-500 mt-1 text-sm">
+              {jobs.filter(j=>j.status==='pending').length} pending · {jobs.filter(j=>j.status==='assigned').length} assigned · {jobs.filter(j=>j.status==='in_progress').length} in progress
+            </p>
+          </div>
+          <button onClick={openAdd} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition">
+            <Plus size={17}/> New Job Order
+          </button>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition">
-          <Plus size={17}/> New Job Order
-        </button>
-      </div>
 
-      <div className="flex flex-wrap gap-3 mb-5">
-        <div className="flex gap-1.5 flex-wrap">
-          {['all',...Object.keys(JOB_STATUSES)].map(s=>(
-            <button key={s} onClick={()=>{ setStatus(s); setCurrentPage(1); }} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${statusFilter===s?'bg-orange-500 text-white':'bg-white border border-gray-300 text-gray-600 hover:border-orange-300'}`}>
-              {s==='all'?'All':JOB_STATUSES[s]?.label}
-            </button>
-          ))}
-        </div>
-        <div className="relative flex-1 min-w-44">
-          <Search size={14} className="absolute left-3 top-2.5 text-gray-400"/>
-          <input value={search} onChange={e=>{ setSearch(e.target.value); setCurrentPage(1); }} placeholder="Search customer, vehicle, job type…" className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"/>
-          {search && <button onClick={()=>{ setSearch(''); setCurrentPage(1); }} className="absolute right-3 top-2.5 text-gray-400"><X size={14}/></button>}
+        {/* Filters */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
+          {/* Mobile Filter Row */}
+          <div className="flex gap-2 w-full sm:hidden">
+            <div className="bg-gray-100 p-1 rounded-xl flex flex-1">
+              {[{k:'all',l:'All'},{k:'pending',l:'Pending'},{k:'in_progress',l:'In Progress'}].map(ft=>(
+                <button
+                  key={ft.k}
+                  onClick={()=>{ setStatus(ft.k); setCurrentPage(1); }}
+                  className={`flex-1 py-1.5 text-center rounded-lg text-xs font-semibold transition-all duration-200 ${
+                    statusFilter===ft.k
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  {ft.l}
+                </button>
+              ))}
+            </div>
+            
+            <div className="relative flex-shrink-0">
+              <select
+                value={['all','pending','in_progress'].includes(statusFilter) ? 'all' : statusFilter}
+                onChange={e=>{ setStatus(e.target.value); setCurrentPage(1); }}
+                className="appearance-none bg-white border border-gray-300 rounded-xl pl-3.5 pr-8 py-2 text-xs font-semibold text-gray-700 focus:outline-none cursor-pointer h-full"
+              >
+                <option value="all">More</option>
+                <option value="assigned">Assigned</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-gray-500">
+                <ChevronDown size={14} />
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Filter Row */}
+          <div className="hidden sm:flex gap-1.5 flex-wrap">
+            {['all',...Object.keys(JOB_STATUSES)].map(s=>(
+              <button key={s} onClick={()=>{ setStatus(s); setCurrentPage(1); }} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${statusFilter===s?'bg-orange-500 text-white':'bg-white border border-gray-300 text-gray-600 hover:border-orange-300'}`}>
+                {s==='all'?'All':JOB_STATUSES[s]?.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative flex-1">
+            <Search size={14} className="absolute left-3 top-3 sm:top-2.5 text-gray-400"/>
+            <input value={search} onChange={e=>{ setSearch(e.target.value); setCurrentPage(1); }} placeholder="Search customer, vehicle, job type…" className="w-full pl-9 pr-8 py-2 sm:py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"/>
+            {search && <button onClick={()=>{ setSearch(''); setCurrentPage(1); }} className="absolute right-3 top-3 sm:top-2.5 text-gray-400"><X size={14}/></button>}
+          </div>
         </div>
       </div>
 
       {loading ? <div className="flex justify-center py-20"><div className="animate-spin h-8 w-8 border-b-2 border-orange-500 rounded-full"/></div> : (
-        <div className="space-y-3">
-          {paginatedJobs.length===0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 py-16 text-center"><ClipboardList size={40} className="mx-auto text-gray-300 mb-3"/><p className="text-gray-500 text-sm">No job orders found</p></div>
-          ) : paginatedJobs.map(job => {
-            const sm = JOB_STATUSES[job.status] || JOB_STATUSES.pending;
-            return (
-              <div key={job.id} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm transition">
-                <div className="flex items-start gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-xs font-mono text-gray-400">{job.jobNumber}</span>
-                      <h3 className="font-semibold text-gray-900 text-sm">{job.customer}</h3>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${sm.cls}`}>{sm.label}</span>
-                      <span className="ml-auto font-bold text-gray-900">₱{job.amount.toLocaleString()}</span>
+        <div>
+          <div className="space-y-3">
+            {paginatedJobs.length===0 ? (
+              <div className="bg-white rounded-xl border border-gray-200 py-16 text-center"><ClipboardList size={40} className="mx-auto text-gray-300 mb-3"/><p className="text-gray-500 text-sm">No job orders found</p></div>
+            ) : paginatedJobs.map(job => {
+              const sm = JOB_STATUSES[job.status] || JOB_STATUSES.pending;
+              return (
+                <div key={job.id || job._id} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 hover:shadow-sm transition flex flex-col gap-3 cursor-pointer" onClick={()=>setDetail(job)}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="text-xs font-mono text-gray-400">{job.jobNumber}</span>
+                        <h3 className="font-semibold text-gray-900 text-sm truncate">{job.customer}</h3>
+                      </div>
+                      <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-lg ${sm.cls}`}>{sm.label}</span>
                     </div>
-                    <div className="flex flex-wrap gap-x-4 text-xs text-gray-500 mb-2">
+                    
+                    <div className="text-right flex-shrink-0 flex flex-col items-end">
+                      <span className="font-bold text-gray-900 text-sm sm:text-base">₱{job.amount.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 text-xs text-gray-500 border-t border-gray-100/60 pt-2.5 mt-0.5">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
                       <span className="flex items-center gap-1"><Car size={11}/>{job.vehicle}</span>
                       <span className="flex items-center gap-1"><Wrench size={11}/>{job.type}</span>
-                      {job.assignedTo && <span className="flex items-center gap-1"><UserCheck size={11}/>{job.assignedTo}</span>}
-                      {job.scheduledDate && <span className="flex items-center gap-1"><Clock size={11}/>{job.scheduledDate}</span>}
                     </div>
-                    {(job.notes || job.description) && <p className="text-xs text-gray-400 italic truncate">{job.notes || job.description}</p>}
-                  </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    {/* Quick assign if unassigned */}
-                    {!job.assignedTo && (
-                      <select onChange={e=>assignTech(job.id,e.target.value)} defaultValue=""
-                        className="text-xs border border-gray-300 rounded-lg px-2 py-1.5 text-gray-600 focus:outline-none">
-                        <option value="" disabled>Assign…</option>
-                        {technicians.map(t=><option key={t.id} value={t.name}>{t.name}</option>)}
-                      </select>
+                    {job.scheduledDate && (
+                      <div className="flex items-center gap-1 text-gray-400">
+                        <Clock size={11}/>Scheduled: {job.scheduledDate}
+                      </div>
                     )}
-                    <button onClick={()=>setDetail(job)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700"><ChevronRight size={16}/></button>
-                    <button onClick={()=>openEdit(job)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700"><Edit2 size={14}/></button>
-                    <button onClick={()=>handleDelete(job.id)} className="p-1.5 hover:bg-red-50 rounded-md text-gray-400 hover:text-red-600"><Trash2 size={14}/></button>
+                    {(job.notes || job.description) && (
+                      <p className="text-[11px] text-gray-400 italic truncate mt-0.5">{job.notes || job.description}</p>
+                    )}
+                  </div>
+
+                  {/* Actions & Technicians */}
+                  <div className="flex items-center justify-between gap-2 border-t border-gray-100/60 pt-2.5 mt-0.5">
+                    <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
+                      {job.assignedTo ? (
+                        <span className="text-[11px] bg-orange-50 text-orange-700 px-2 py-0.5 rounded-lg font-medium border border-orange-100 flex items-center gap-1">
+                          <UserCheck size={10}/> {job.assignedTo}
+                        </span>
+                      ) : (
+                        <div onClick={e => e.stopPropagation()}>
+                          <select
+                            onChange={e=>assignTech(job.id || job._id,e.target.value)}
+                            defaultValue=""
+                            className="text-[11px] border border-gray-300 rounded-lg px-2 py-1 text-gray-600 focus:outline-none bg-white font-medium cursor-pointer"
+                          >
+                            <option value="" disabled>Assign Installer…</option>
+                            {technicians.map(t=><option key={t.id || t._id} value={t.name}>{t.name}</option>)}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                      {['pending', 'assigned', 'in_progress'].includes(job.status) && (
+                        <button onClick={()=>cycleStatus(job.id || job._id, job.status)} className="flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white text-[11px] px-2.5 py-1.5 rounded-lg font-medium transition shadow-sm">
+                          <span>Next Status</span>
+                        </button>
+                      )}
+                      <button onClick={()=>openEdit(job)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition"><Edit2 size={13}/></button>
+                      <button onClick={()=>handleDelete(job.id || job._id)} className="p-1.5 hover:bg-rose-50 rounded-md text-gray-400 hover:text-rose-600 transition"><Trash2 size={13}/></button>
+                      <button onClick={()=>setDetail(job)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition"><ChevronRight size={15}/></button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
 
-          {/* Pagination controls */}
-          {filtered.length > limit && (
-            <div className="flex items-center justify-between mt-6 bg-white border border-gray-200 rounded-xl px-5 py-4">
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4 mt-2">
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition"
+                className="px-3.5 py-1.5 rounded-lg border border-gray-300 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
               >
                 Previous
               </button>
-              <span className="text-xs font-medium text-gray-500">
-                Showing {startIndex + 1} to {Math.min(startIndex + limit, filtered.length)} of {filtered.length} job orders
+              <span className="text-xs text-gray-500 font-medium">
+                Page {currentPage} of {totalPages}
               </span>
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition"
+                className="px-3.5 py-1.5 rounded-lg border border-gray-300 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
               >
                 Next
               </button>
@@ -339,9 +408,8 @@ export default function JobOrdersPage() {
               <button onClick={()=>setShowForm(false)} className="text-gray-400 hover:text-gray-600"><X size={20}/></button>
             </div>
             <form onSubmit={handleSave}>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div><label className="block text-xs font-medium text-gray-600 mb-1">Job Order Number (Auto-generated)</label><input readOnly type="text" value={form.jobNumber || nextNum()} className={f + " bg-gray-50 cursor-not-allowed"}/></div>
-                <div className="hidden md:block"></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-600 mb-1">Job Order Number (Auto-generated)</label><input readOnly type="text" value={form.jobNumber || nextNum()} className={f + " bg-gray-50 cursor-not-allowed"}/></div>
                 <div className="relative" onClick={e => e.stopPropagation()}>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Customer Name *</label>
                   <input
@@ -412,7 +480,7 @@ export default function JobOrdersPage() {
                   const selectedCust = customers.find(c => (c._id || c.id) === form.customerId);
                   if (!selectedCust || !selectedCust.vehicles || selectedCust.vehicles.length === 0) return null;
                   return (
-                    <div className="col-span-2 bg-orange-50/50 border border-orange-100 rounded-xl p-3 flex flex-col gap-2">
+                    <div className="col-span-1 sm:col-span-2 bg-orange-50/50 border border-orange-100 rounded-xl p-3 flex flex-col gap-2">
                       <label className="text-xs font-semibold text-gray-700">Select Customer's Registered Vehicle:</label>
                       <div className="flex gap-2 flex-wrap">
                         {selectedCust.vehicles.map((v, idx) => {
@@ -513,15 +581,15 @@ export default function JobOrdersPage() {
                   </select>
                 </div>
                 {/* Parts */}
-                <div className="col-span-2">
+                <div className="col-span-1 sm:col-span-2">
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-xs font-medium text-gray-600">Parts & Materials</label>
                     <button type="button" onClick={addPart} className="text-xs text-orange-500 hover:text-orange-700 font-medium flex items-center gap-1"><Plus size={13}/>Add part</button>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {form.parts.map((pt,i)=>(
-                      <div key={i} className="flex gap-2 items-center">
-                        <div className="flex-1 relative">
+                      <div key={i} className="flex flex-col sm:flex-row gap-2 border border-gray-100 bg-gray-50/50 p-2.5 rounded-lg sm:border-0 sm:bg-transparent sm:p-0">
+                        <div className="flex-1 min-w-0 relative">
                           <select
                             required
                             value={pt.name}
@@ -538,7 +606,7 @@ export default function JobOrdersPage() {
                                 updatePart(i, 'sku', '');
                               }
                             }}
-                            className={f.replace('w-full', '') + ' w-full'}
+                            className={f}
                           >
                             <option value="">Select part…</option>
                             {uniqueProducts.map(p => (
@@ -548,9 +616,11 @@ export default function JobOrdersPage() {
                             ))}
                           </select>
                         </div>
-                        <input type="number" placeholder="Qty" min="1" value={pt.qty} onChange={e=>updatePart(i,'qty',e.target.value)} className={f.replace('w-full', '') + ' w-16'}/>
-                        <input type="number" placeholder="Price ₱" min="0" value={pt.price} onChange={e=>updatePart(i,'price',e.target.value)} className={f.replace('w-full', '') + ' w-24'}/>
-                        <button type="button" onClick={()=>removePart(i)} className="text-gray-400 hover:text-red-500 flex-shrink-0"><X size={16}/></button>
+                        <div className="flex gap-2 items-center w-full sm:w-auto">
+                          <input type="number" placeholder="Qty" min="1" value={pt.qty} onChange={e=>updatePart(i,'qty',e.target.value)} className={f + ' w-20 flex-1 sm:flex-initial sm:w-16'}/>
+                          <input type="number" placeholder="Price ₱" min="0" value={pt.price} onChange={e=>updatePart(i,'price',e.target.value)} className={f + ' w-28 flex-1 sm:flex-initial sm:w-24'}/>
+                          <button type="button" onClick={()=>removePart(i)} className="text-gray-400 hover:text-red-500 flex-shrink-0 p-1"><X size={18}/></button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -565,7 +635,7 @@ export default function JobOrdersPage() {
                     className={f + " bg-gray-50 font-semibold text-orange-600 cursor-not-allowed"}
                   />
                 </div>
-                <div className="col-span-2">
+                <div className="col-span-1 sm:col-span-2">
                   <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
                   <textarea rows={2} value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} className={f+' resize-none'}/>
                 </div>

@@ -121,61 +121,109 @@ export default function InventoryPage() {
   const totalVal  = products.reduce((s,p)=>s+p.stock*p.costPrice,0);
 
   return (
-    <div className="p-8">
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Inventory</h1>
-          <p className="text-gray-500 mt-1 text-sm">{products.length} products · ₱{totalVal.toLocaleString()} stock value{lowCount>0&&<span className="text-red-500 font-medium"> · {lowCount} low stock</span>}</p>
-        </div>
-        <div className="flex gap-2">
-          {profile?.plan === 'starter' ? (
-            <div className="relative group">
-              <button
-                disabled
-                className="flex items-center gap-2 border border-gray-200 text-gray-400 opacity-50 text-sm font-medium px-3 py-2.5 rounded-lg cursor-not-allowed select-none"
-              >
-                <ArrowLeftRight size={15}/> Transfer
-              </button>
-              
-              {/* Instant Tooltip */}
-              <div className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 hidden group-hover:flex items-center bg-[#1f2937] border border-white/10 text-white text-[10px] font-semibold px-2.5 py-1.5 rounded-lg shadow-xl whitespace-nowrap">
-                Multi-branch stock transfers require the Growth and Pro plans
-                {/* Triangle Arrow */}
-                <div className="absolute bottom-full border-4 border-transparent border-b-[#1f2937] left-1/2 -translate-x-1/2" />
+    <div className="p-4 md:p-8">
+      {/* Sticky Header & Filter Container */}
+      <div className="sticky top-0 bg-gray-50/95 backdrop-blur-sm z-10 -mx-4 md:-mx-8 px-4 md:px-8 pt-2 pb-4 border-b border-gray-200/60 mb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Inventory</h1>
+            <p className="text-gray-500 mt-1 text-sm">{products.length} products · ₱{totalVal.toLocaleString()} stock value{lowCount>0&&<span className="text-red-500 font-medium"> · {lowCount} low stock</span>}</p>
+          </div>
+          <div className="flex gap-2 w-full sm:w-auto">
+            {profile?.plan === 'starter' ? (
+              <div className="relative group flex-1 sm:flex-initial">
+                <button
+                  disabled
+                  className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-400 opacity-50 text-sm font-medium px-3 py-2.5 rounded-lg cursor-not-allowed select-none"
+                >
+                  <ArrowLeftRight size={15}/> Transfer
+                </button>
+                
+                {/* Instant Tooltip */}
+                <div className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 hidden group-hover:flex items-center bg-[#1f2937] border border-white/10 text-white text-[10px] font-semibold px-2.5 py-1.5 rounded-lg shadow-xl whitespace-nowrap">
+                  Multi-branch stock transfers require the Growth and Pro plans
+                  {/* Triangle Arrow */}
+                  <div className="absolute bottom-full border-4 border-transparent border-b-[#1f2937] left-1/2 -translate-x-1/2" />
+                </div>
               </div>
-            </div>
-          ) : (
-            <button onClick={()=>setShowTransfer(true)} className="flex items-center gap-2 border border-gray-300 text-gray-700 hover:border-gray-400 text-sm font-medium px-3 py-2.5 rounded-lg transition"><ArrowLeftRight size={15}/> Transfer</button>
-          )}
-          <button onClick={openAdd} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition"><Plus size={17}/> Add Product</button>
+            ) : (
+              <button onClick={()=>setShowTransfer(true)} className="flex-1 sm:flex-initial flex items-center justify-center gap-2 border border-gray-300 text-gray-700 hover:border-gray-400 text-sm font-medium px-3 py-2.5 rounded-lg transition"><ArrowLeftRight size={15}/> Transfer</button>
+            )}
+            <button onClick={openAdd} className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition"><Plus size={17}/> Add Product</button>
+          </div>
         </div>
-      </div>
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        {[{k:'all',l:'All'},{k:'low',l:`Low Stock (${lowCount})`},{k:'out',l:`Out of Stock (${outCount})`}].map(ft=>(
-          <button key={ft.k} onClick={()=>setStock(ft.k)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${stockFilter===ft.k?'bg-orange-500 text-white':'bg-white border border-gray-300 text-gray-600 hover:border-orange-300'}`}>{ft.l}</button>
-        ))}
-        <select value={catFilter} onChange={e=>setCat(e.target.value)} className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-300 text-gray-600 focus:outline-none bg-white">
-          <option value="all">All Categories</option>
-          {PRODUCT_CATEGORIES.map(c=><option key={c}>{c}</option>)}
-        </select>
-        <div className="relative flex-1 min-w-48">
-          <Search size={14} className="absolute left-3 top-2.5 text-gray-400"/>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search SKU, name, supplier…" className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"/>
-          {search && <button onClick={()=>setSearch('')} className="absolute right-3 top-2.5 text-gray-400"><X size={14}/></button>}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-2">
+          {/* Mobile Filter Tabs (Segmented Control style) */}
+          <div className="bg-gray-100 p-1 rounded-xl flex w-full sm:hidden">
+            {[{k:'all',l:'All'},{k:'low',l:`Low Stock (${lowCount})`},{k:'out',l:`Out of Stock (${outCount})`}].map(ft=>(
+              <button
+                key={ft.k}
+                onClick={()=>setStock(ft.k)}
+                className={`flex-1 py-1.5 text-center rounded-lg text-xs font-semibold transition-all duration-200 ${
+                  stockFilter===ft.k
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                {ft.l}
+              </button>
+            ))}
+          </div>
+
+          {/* Desktop Filter Tabs */}
+          <div className="hidden sm:flex gap-2">
+            {[{k:'all',l:'All'},{k:'low',l:`Low Stock (${lowCount})`},{k:'out',l:`Out of Stock (${outCount})`}].map(ft=>(
+              <button
+                key={ft.k}
+                onClick={()=>setStock(ft.k)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                  stockFilter===ft.k
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-white border border-gray-300 text-gray-600 hover:border-orange-300'
+                }`}
+              >
+                {ft.l}
+              </button>
+            ))}
+          </div>
+
+          <select
+            value={catFilter}
+            onChange={e=>setCat(e.target.value)}
+            className="w-full sm:w-auto px-3 py-2 sm:py-1.5 rounded-lg text-sm sm:text-xs font-medium border border-gray-300 text-gray-600 focus:outline-none bg-white"
+          >
+            <option value="all">All Categories</option>
+            {PRODUCT_CATEGORIES.map(c=><option key={c}>{c}</option>)}
+          </select>
+          
+          <div className="relative flex-1">
+            <Search size={14} className="absolute left-3 top-3 sm:top-2.5 text-gray-400"/>
+            <input
+              value={search}
+              onChange={e=>setSearch(e.target.value)}
+              placeholder="Search SKU, name, supplier…"
+              className="w-full pl-9 pr-8 py-2 sm:py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+            {search && (
+              <button onClick={()=>setSearch('')} className="absolute right-3 top-3 sm:top-2.5 text-gray-400">
+                <X size={14}/>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Auto-Reorder rules teaser (Growth & Pro only) */}
       {profile && ['growth', 'pro'].includes(profile.plan) && (
-        <div className="mb-4 bg-orange-50/50 border border-orange-200/50 rounded-xl px-4 py-3 flex items-center justify-between text-xs gap-3">
-          <div className="flex items-center gap-2">
-            <RefreshCw size={14} className="text-orange-500 flex-shrink-0" />
-            <div className="text-gray-600">
+        <div className="mb-4 bg-orange-50/50 border border-orange-200/50 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-3">
+          <div className="flex items-start gap-2.5">
+            <RefreshCw size={14} className="text-orange-500 mt-0.5 flex-shrink-0" />
+            <div className="text-gray-600 leading-relaxed">
               <span className="font-bold text-gray-800">Auto-Draft Purchase Orders</span> is coming soon. The system will automatically create draft purchase orders when products drop below their safe-stock limits.
             </div>
           </div>
-          <span className="font-bold text-orange-600 uppercase text-[9px] bg-orange-100 px-1.5 py-0.5 rounded flex-shrink-0">Future Update</span>
+          <span className="font-bold text-orange-600 uppercase text-[9px] bg-orange-100 px-1.5 py-0.5 rounded self-start sm:self-auto flex-shrink-0">Future Update</span>
         </div>
       )}
 
@@ -184,35 +232,92 @@ export default function InventoryPage() {
           {filtered.length===0 ? (
             <div className="py-16 text-center"><Package size={40} className="mx-auto text-gray-300 mb-3"/><p className="text-gray-500 text-sm">No products found</p><button onClick={openAdd} className="mt-3 text-orange-500 text-sm font-medium hover:underline">Add one</button></div>
           ) : (
-            <table className="w-full">
-              <thead><tr className="bg-gray-50 border-b border-gray-200">{['SKU','Product','Category','Branch','Stock','Cost','Selling',''].map(h=><th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>)}</tr></thead>
-              <tbody className="divide-y divide-gray-100">
-                {filtered.map(p=>{
+            <div>
+              {/* Mobile Card List View */}
+              <div className="divide-y divide-gray-100 sm:hidden">
+                {filtered.map(p => {
                   const low=p.stock>0&&p.stock<=p.reorderLevel, out=p.stock===0;
                   const margin=p.sellingPrice>0?Math.round(((p.sellingPrice-p.costPrice)/p.sellingPrice)*100):0;
                   return (
-                    <tr key={p.id} className="hover:bg-gray-50 transition cursor-pointer" onClick={()=>setDetail(p)}>
-                      <td className="px-4 py-3 text-xs font-mono text-gray-500">{p.sku}</td>
-                      <td className="px-4 py-3"><p className="text-sm font-medium text-gray-900">{p.name}</p><p className="text-xs text-gray-400">{p.supplier}</p></td>
-                      <td className="px-4 py-3 text-xs text-gray-600">{p.category}</td>
-                      <td className="px-4 py-3 text-xs text-gray-600">{p.branch}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5"><span className={`text-sm font-bold ${out?'text-red-600':low?'text-amber-600':'text-gray-900'}`}>{p.stock} {p.unit}</span>{(low||out)&&<AlertTriangle size={12} className={out?'text-red-500':'text-amber-500'}/>}</div>
-                        <p className="text-xs text-gray-400">Min: {p.reorderLevel}</p>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">₱{p.costPrice.toLocaleString()}</td>
-                      <td className="px-4 py-3"><p className="text-sm font-semibold text-gray-900">₱{p.sellingPrice.toLocaleString()}</p><p className="text-xs text-emerald-600">{margin}%</p></td>
-                      <td className="px-4 py-3" onClick={e=>e.stopPropagation()}>
-                        <div className="flex items-center gap-1">
-                          <button onClick={()=>openEdit(p)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition"><Edit2 size={14}/></button>
-                          <button onClick={()=>handleDelete(p.id)} className="p-1.5 hover:bg-red-50 rounded-md text-gray-400 hover:text-red-600 transition"><Trash2 size={14}/></button>
+                    <div
+                      key={p.id || p._id}
+                      className="p-4 hover:bg-gray-50 active:bg-gray-100 transition cursor-pointer flex flex-col gap-2"
+                      onClick={()=>setDetail(p)}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-gray-900 truncate">{p.name}</p>
+                          <p className="text-xs font-mono text-gray-500 mt-0.5">{p.sku}</p>
                         </div>
-                      </td>
-                    </tr>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <span className={`text-xs font-bold px-2 py-1 rounded-lg ${out?'bg-rose-50 text-rose-600':low?'bg-amber-50 text-amber-600':'bg-emerald-50 text-emerald-600'}`}>
+                            {p.stock} {p.unit}
+                          </span>
+                          {(low||out)&&<AlertTriangle size={12} className={out?'text-rose-500':'text-amber-500'}/>}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="truncate">{p.category}</span>
+                          <span className="text-gray-300">•</span>
+                          <span className="truncate">{p.branch}</span>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <span className="font-semibold text-gray-900">₱{p.sellingPrice.toLocaleString()}</span>
+                          <span className="text-emerald-600 text-[10px] ml-1">({margin}%)</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2 mt-1 border-t border-gray-100/60">
+                        <span className="text-xs text-gray-400 truncate max-w-[150px]">By: {p.supplier || 'N/A'}</span>
+                        <div className="flex items-center gap-1" onClick={e=>e.stopPropagation()}>
+                          <button onClick={()=>openEdit(p)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition">
+                            <Edit2 size={13}/>
+                          </button>
+                          <button onClick={()=>handleDelete(p.id || p._id)} className="p-1.5 hover:bg-rose-50 rounded-md text-gray-400 hover:text-rose-600 transition">
+                            <Trash2 size={13}/>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full min-w-[800px] md:min-w-0">
+                  <thead><tr className="bg-gray-50 border-b border-gray-200">{['SKU','Product','Category','Branch','Stock','Cost','Selling',''].map(h=><th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>)}</tr></thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {filtered.map(p=>{
+                      const low=p.stock>0&&p.stock<=p.reorderLevel, out=p.stock===0;
+                      const margin=p.sellingPrice>0?Math.round(((p.sellingPrice-p.costPrice)/p.sellingPrice)*100):0;
+                      return (
+                        <tr key={p.id || p._id} className="hover:bg-gray-50 transition cursor-pointer" onClick={()=>setDetail(p)}>
+                          <td className="px-4 py-3 text-xs font-mono text-gray-500">{p.sku}</td>
+                          <td className="px-4 py-3"><p className="text-sm font-medium text-gray-900">{p.name}</p><p className="text-xs text-gray-400">{p.supplier}</p></td>
+                          <td className="px-4 py-3 text-xs text-gray-600">{p.category}</td>
+                          <td className="px-4 py-3 text-xs text-gray-600">{p.branch}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1.5"><span className={`text-sm font-bold ${out?'text-red-600':low?'text-amber-600':'text-gray-900'}`}>{p.stock} {p.unit}</span>{(low||out)&&<AlertTriangle size={12} className={out?'text-red-500':'text-amber-500'}/>}</div>
+                            <p className="text-xs text-gray-400">Min: {p.reorderLevel}</p>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-700">₱{p.costPrice.toLocaleString()}</td>
+                          <td className="px-4 py-3"><p className="text-sm font-semibold text-gray-900">₱{p.sellingPrice.toLocaleString()}</p><p className="text-xs text-emerald-600">{margin}%</p></td>
+                          <td className="px-4 py-3" onClick={e=>e.stopPropagation()}>
+                            <div className="flex items-center gap-1">
+                              <button onClick={()=>openEdit(p)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition"><Edit2 size={14}/></button>
+                              <button onClick={()=>handleDelete(p.id || p._id)} className="p-1.5 hover:bg-red-50 rounded-md text-gray-400 hover:text-red-600 transition"><Trash2 size={14}/></button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
         </div>
       )}

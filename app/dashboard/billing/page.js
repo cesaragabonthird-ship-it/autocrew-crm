@@ -54,7 +54,7 @@ export default function BillingPage() {
   ];
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-4 md:p-8 max-w-3xl">
       <div className="mb-7">
         <h1 className="text-3xl font-bold text-gray-900">Billing & Subscription</h1>
         <p className="text-gray-500 mt-1 text-sm">Manage your plan and payment information</p>
@@ -75,7 +75,7 @@ export default function BillingPage() {
           </div>
           <Zap size={40} className="text-white/20"/>
         </div>
-        <div className="mt-5 pt-4 border-t border-white/20 grid grid-cols-3 gap-4 text-sm">
+        <div className="mt-5 pt-4 border-t border-white/20 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
           {plan.priceMonthly > 0 && subStatus === 'trial' && <div><p className="text-white/60 text-xs">Trial ends in</p><p className="font-bold">{trialDaysLeft} day{trialDaysLeft!==1?'s':''}</p></div>}
           {plan.priceMonthly > 0 && subStatus === 'active' && <div><p className="text-white/60 text-xs">Next billing</p><p className="font-bold">{billingDaysLeft===0?'Today':billingDaysLeft===1?'Tomorrow':`${billingDaysLeft} days`}</p></div>}
           {plan.priceMonthly > 0 && <div><p className="text-white/60 text-xs">Billing date</p><p className="font-bold">{profile?.nextBillingDate?new Date(profile.nextBillingDate).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}):'—'}</p></div>}
@@ -88,7 +88,7 @@ export default function BillingPage() {
       {/* What's included */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
         <h2 className="text-sm font-semibold text-gray-900 mb-4">What's included</h2>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
           {plan.features.map(feat => (
             <div key={feat} className="flex items-center gap-2 text-sm text-gray-700">
               <Check size={14} className="text-emerald-500 flex-shrink-0"/>{feat}
@@ -104,9 +104,9 @@ export default function BillingPage() {
           <p className="text-xs text-gray-500 mb-4">Send payment before your billing date. We'll activate within 24 hours of confirming receipt.</p>
 
           {/* Amount highlight */}
-          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-4 flex items-center justify-between">
+          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div><p className="text-xs text-orange-600 font-medium">Amount to send</p><p className="text-3xl font-bold text-orange-600">₱{plan.priceMonthly.toLocaleString()}</p></div>
-            <div className="text-right text-xs text-orange-600"><p>Reference:</p><p className="font-bold text-orange-800">{profile?.shopName || 'Your Shop Name'}</p></div>
+            <div className="text-left sm:text-right text-xs text-orange-600"><p>Reference:</p><p className="font-bold text-orange-800">{profile?.shopName || 'Your Shop Name'}</p></div>
           </div>
 
           {/* Tab selector */}
@@ -124,16 +124,16 @@ export default function BillingPage() {
 
           {tab === 'gcash' && (
             <div className="bg-sky-50 border border-sky-200 rounded-xl p-4">
-              <div className="flex items-center gap-4 mb-3">
-                <div className="bg-sky-600 text-white rounded-xl px-5 py-3 text-center flex-shrink-0">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                <div className="bg-sky-600 text-white rounded-xl px-5 py-4 text-center w-full sm:w-auto flex-shrink-0 shadow-sm">
                   <p className="text-xs opacity-75">GCash</p>
-                  <p className="text-lg font-bold tracking-widest">{GCASH_NUM}</p>
+                  <p className="text-lg font-bold tracking-widest my-1">{GCASH_NUM}</p>
                   <p className="text-xs opacity-75">{GCASH_NAME}</p>
                 </div>
-                <div className="text-sm text-sky-800">
+                <div className="text-sm text-sky-800 flex-1">
                   <p className="font-semibold mb-1">Steps:</p>
-                  <ol className="space-y-0.5 text-xs">
-                    {GCASH_STEPS.map((s,i)=><li key={i}>{i+1}. {s}</li>)}
+                  <ol className="space-y-1 text-xs">
+                    {GCASH_STEPS.map((s,i)=><li key={i} className="leading-relaxed">{i+1}. {s}</li>)}
                   </ol>
                 </div>
               </div>
@@ -171,12 +171,12 @@ export default function BillingPage() {
               const order = {starter:0,growth:1,pro:2};
               return order[p.id] > order[plan.id];
             }).map(p => (
-              <div key={p.id} className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl p-4 hover:border-orange-300 transition">
+              <div key={p.id} className="flex flex-col sm:flex-row sm:items-center justify-between bg-gray-50 border border-gray-200 rounded-xl p-4 gap-3 hover:border-orange-300 transition">
                 <div>
                   <p className="font-semibold text-gray-900 text-sm">{p.name} Plan</p>
                   <p className="text-xs text-gray-500">{p.features[0]}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-left sm:text-right">
                   <p className="font-bold text-gray-900">₱{p.priceMonthly.toLocaleString()}/mo</p>
                   <a href={`mailto:${SUPPORT}?subject=Upgrade to ${p.name}&body=Hi, I'd like to upgrade from ${plan.name} to ${p.name}.`}
                     className="text-xs text-orange-500 hover:underline font-medium">Contact to upgrade →</a>

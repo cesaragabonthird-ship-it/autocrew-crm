@@ -6,14 +6,14 @@ import { Save, CheckCircle2 } from 'lucide-react';
 import { payrollAPI, tenantAPI, branchesAPI } from '@/lib/convex-api';
 
 const Section = ({title,children}) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-6 mb-5">
+  <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 mb-5">
     <h2 className="text-base font-semibold text-gray-900 mb-5 pb-3 border-b border-gray-100">{title}</h2>
-    <div className="grid grid-cols-2 gap-4">{children}</div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{children}</div>
   </div>
 );
 
 const Field = ({label,children,full}) => (
-  <div className={full?'col-span-2':''}>
+  <div className={full?'col-span-1 sm:col-span-2':''}>
     <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
     {children}
   </div>
@@ -119,7 +119,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-4 md:p-8 max-w-2xl">
       <div className="mb-7">
         <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
         <p className="text-gray-500 mt-1 text-sm">Configure your shop preferences and defaults</p>
@@ -178,7 +178,7 @@ export default function SettingsPage() {
       </Section>
 
       <Section title="SMS Notifications (Coming Soon)">
-        <div className="col-span-2 flex items-start gap-3 bg-gray-50 border border-gray-200/80 rounded-xl p-4 opacity-70">
+        <div className="col-span-1 sm:col-span-2 flex items-start gap-3 bg-gray-50 border border-gray-200/80 rounded-xl p-4 opacity-70">
           <input type="checkbox" disabled checked={false} className="mt-1 border-gray-300 rounded text-orange-500 focus:ring-orange-500 h-4 w-4 cursor-not-allowed" />
           <div>
             <p className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
@@ -193,7 +193,7 @@ export default function SettingsPage() {
       </Section>
 
 
-      <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2.5 rounded-xl transition disabled:opacity-50">
+      <button onClick={handleSave} disabled={saving} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2.5 rounded-xl transition disabled:opacity-50">
         <Save size={17}/> {saving ? 'Saving...' : 'Save Settings'}
       </button>
     </div>

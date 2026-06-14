@@ -170,22 +170,22 @@ export default function AttendanceTab() {
   return (
     <div>
       {/* Subheader */}
-      <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Daily Attendance Logs</h2>
           <p className="text-xs text-gray-500">Record time-ins, tardiness, and overtime. Logs feed directly into payroll computations.</p>
         </div>
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full sm:w-auto">
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 w-full sm:w-auto"
           />
           {employees.length > 0 && (
             <button
               onClick={handleSaveAll}
-              className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-4 py-2 rounded-xl transition"
+              className="flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition w-full sm:w-auto"
             >
               <Save size={14} /> Save All Logs
             </button>

@@ -25,6 +25,11 @@ export default function AdvancesTab() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [actioning, setActioning] = useState({});
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [advances.length, employees.length]);
 
   useEffect(() => {
     let alive = true;
@@ -113,6 +118,10 @@ export default function AdvancesTab() {
     ? advances
     : advances.filter(adv => employees.some(e => e.id === adv.payrollEmployeeId || e._id === adv.payrollEmployeeId));
 
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(displayAdvances.length / itemsPerPage);
+  const paginatedAdvances = displayAdvances.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+
   const totalOutstanding = displayAdvances
     .filter(a => a.status === 'approved')
     .reduce((sum, a) => sum + (a.remainingBalance || 0), 0);
@@ -133,7 +142,7 @@ export default function AdvancesTab() {
       </div>
 
       {/* Subheader */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Cash Advance Tracking</h2>
           <p className="text-xs text-gray-500">Log employee cash advances, set monthly amortization payments, and manage approvals.</p>
@@ -141,7 +150,7 @@ export default function AdvancesTab() {
         {employees.length > 0 && (
           <button
             onClick={openAdd}
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-4 py-2 rounded-xl transition"
+            className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition w-full sm:w-auto"
           >
             <Plus size={14} /> Request Advance
           </button>
@@ -158,98 +167,202 @@ export default function AdvancesTab() {
           <p className="text-sm text-gray-500 font-medium">No cash advance logs found.</p>
         </div>
       ) : (
-        <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
-          <table className="w-full text-sm text-left">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 font-semibold text-xs uppercase">
-                <th className="px-4 py-3">Employee</th>
-                <th className="px-4 py-3 text-center">Amount Requested</th>
-                <th className="px-4 py-3 text-center">Amortization</th>
-                <th className="px-4 py-3 text-center">Remaining Bal</th>
-                <th className="px-4 py-3">Purpose</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {displayAdvances.map(adv => {
-                const advId = adv.id || adv._id;
-                const isActioning = actioning[advId];
+        <div className="space-y-4">
+          {/* Desktop Table View */}
+          <div className="hidden md:block border border-gray-200 rounded-xl overflow-hidden bg-white">
+            <table className="w-full text-sm text-left">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 font-semibold text-xs uppercase">
+                  <th className="px-4 py-3">Employee</th>
+                  <th className="px-4 py-3 text-center">Amount Requested</th>
+                  <th className="px-4 py-3 text-center">Amortization</th>
+                  <th className="px-4 py-3 text-center">Remaining Bal</th>
+                  <th className="px-4 py-3">Purpose</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {paginatedAdvances.map(adv => {
+                  const advId = adv.id || adv._id;
+                  const isActioning = actioning[advId];
 
-                return (
-                  <tr key={advId} className="hover:bg-gray-50 transition">
-                    <td className="px-4 py-3">
-                      <p className="font-semibold text-gray-900">{adv.employeeName}</p>
+                  return (
+                    <tr key={advId} className="hover:bg-gray-50 transition">
+                      <td className="px-4 py-3">
+                        <p className="font-semibold text-gray-900">{adv.employeeName}</p>
+                        <p className="text-xs text-gray-500">Requested: {adv.requestDate}</p>
+                      </td>
+                      <td className="px-4 py-3 text-center font-bold text-gray-900">
+                        ₱{adv.amount.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <p className="font-semibold text-gray-900">₱{adv.amortization.toLocaleString()} /mo</p>
+                        <p className="text-[10px] text-gray-400">for {adv.months} mo</p>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {adv.status === 'approved' ? (
+                          <span className="font-bold text-orange-600">₱{adv.remainingBalance?.toLocaleString()}</span>
+                        ) : adv.status === 'paid' ? (
+                          <span className="text-xs text-emerald-600 font-bold">✓ Fully Paid</span>
+                        ) : (
+                          <span className="text-gray-400 font-medium">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-gray-900 line-clamp-1">{adv.purpose}</p>
+                        {adv.notes && <p className="text-xs text-gray-400 italic line-clamp-1">Notes: {adv.notes}</p>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${
+                          adv.status === 'approved' ? 'bg-emerald-100 text-emerald-700'
+                            : adv.status === 'pending' ? 'bg-amber-100 text-amber-700'
+                            : adv.status === 'paid' ? 'bg-sky-100 text-sky-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}>
+                          {adv.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {adv.status === 'pending' && profile?.role === 'super_admin' ? (
+                          <div className="flex gap-1.5 justify-end">
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateStatus(adv, 'approved')}
+                              disabled={isActioning}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white p-1 rounded-md transition"
+                              title="Approve Request"
+                            >
+                              <Check size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateStatus(adv, 'rejected')}
+                              disabled={isActioning}
+                              className="bg-red-100 hover:bg-red-200 text-red-600 p-1 rounded-md transition"
+                              title="Reject Request"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400 italic font-medium">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card view */}
+          <div className="md:hidden space-y-4">
+            {paginatedAdvances.map(adv => {
+              const advId = adv.id || adv._id;
+              const isActioning = actioning[advId];
+
+              return (
+                <div key={advId} className="bg-white border border-gray-200 rounded-xl p-4 space-y-3 shadow-sm">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{adv.employeeName}</h3>
                       <p className="text-xs text-gray-500">Requested: {adv.requestDate}</p>
-                    </td>
-                    <td className="px-4 py-3 text-center font-bold text-gray-900">
-                      ₱{adv.amount.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <p className="font-semibold text-gray-900">₱{adv.amortization.toLocaleString()} /mo</p>
-                      <p className="text-[10px] text-gray-400">for {adv.months} mo</p>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {adv.status === 'approved' ? (
-                        <span className="font-bold text-orange-600">₱{adv.remainingBalance?.toLocaleString()}</span>
-                      ) : adv.status === 'paid' ? (
-                        <span className="text-xs text-emerald-600 font-bold">✓ Fully Paid</span>
-                      ) : (
-                        <span className="text-gray-400 font-medium">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-gray-900 line-clamp-1">{adv.purpose}</p>
-                      {adv.notes && <p className="text-xs text-gray-400 italic line-clamp-1">Notes: {adv.notes}</p>}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${
-                        adv.status === 'approved' ? 'bg-emerald-100 text-emerald-700'
-                          : adv.status === 'pending' ? 'bg-amber-100 text-amber-700'
-                          : adv.status === 'paid' ? 'bg-sky-105 text-sky-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}>
-                        {adv.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {adv.status === 'pending' && profile?.role === 'super_admin' ? (
-                        <div className="flex gap-1.5 justify-end">
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateStatus(adv, 'approved')}
-                            disabled={isActioning}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white p-1 rounded-md transition"
-                            title="Approve Request"
-                          >
-                            <Check size={14} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateStatus(adv, 'rejected')}
-                            disabled={isActioning}
-                            className="bg-red-100 hover:bg-red-200 text-red-600 p-1 rounded-md transition"
-                            title="Reject Request"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-gray-400 italic font-medium">—</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </div>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${
+                      adv.status === 'approved' ? 'bg-emerald-100 text-emerald-700'
+                        : adv.status === 'pending' ? 'bg-amber-100 text-amber-700'
+                        : adv.status === 'paid' ? 'bg-sky-100 text-sky-700'
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {adv.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100 text-xs">
+                    <div>
+                      <p className="text-gray-500 font-medium">Amount Requested</p>
+                      <p className="font-bold text-gray-900 mt-0.5">₱{adv.amount.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 font-medium">Remaining Bal</p>
+                      <p className="mt-0.5">
+                        {adv.status === 'approved' ? (
+                          <span className="font-bold text-orange-600">₱{adv.remainingBalance?.toLocaleString()}</span>
+                        ) : adv.status === 'paid' ? (
+                          <span className="text-xs text-emerald-600 font-bold">✓ Fully Paid</span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-gray-500 font-medium">Amortization</p>
+                      <p className="font-semibold text-gray-900 mt-0.5">
+                        ₱{adv.amortization.toLocaleString()} /mo <span className="text-gray-400 font-normal">for {adv.months} mo</span>
+                      </p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-gray-500 font-medium">Purpose</p>
+                      <p className="text-gray-900 mt-0.5">{adv.purpose}</p>
+                      {adv.notes && <p className="text-xs text-gray-400 italic mt-0.5">Notes: {adv.notes}</p>}
+                    </div>
+                  </div>
+
+                  {adv.status === 'pending' && profile?.role === 'super_admin' && (
+                    <div className="flex gap-2 justify-end pt-2 border-t border-gray-100">
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateStatus(adv, 'rejected')}
+                        disabled={isActioning}
+                        className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition"
+                      >
+                        <X size={12} /> Reject
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateStatus(adv, 'approved')}
+                        disabled={isActioning}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition shadow-sm"
+                      >
+                        <Check size={12} /> Approve
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Previous
+              </button>
+              <span className="text-xs text-gray-500 font-medium">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
 
       {/* Request Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-4 md:p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl font-bold text-gray-900">New Cash Advance Request</h2>
               <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600">
@@ -266,7 +379,7 @@ export default function AdvancesTab() {
                     ))}
                   </select>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Advance Amount (₱) *</label>
                     <input required type="number" min="1" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} className={f} />
@@ -276,7 +389,7 @@ export default function AdvancesTab() {
                     <input required type="number" min="1" value={form.amortization} onChange={e => setForm(p => ({ ...p, amortization: e.target.value }))} className={f} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Amortization Months *</label>
                     <input required type="number" min="1" max="60" value={form.months} onChange={e => setForm(p => ({ ...p, months: e.target.value }))} className={f} />
@@ -298,20 +411,20 @@ export default function AdvancesTab() {
                   <textarea rows={2} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} className={f + ' resize-none'} />
                 </div>
               </div>
-              <div className="flex gap-3">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold py-2.5 rounded-xl transition disabled:opacity-50"
-                >
-                  {saving ? 'Submitting…' : 'Submit Request'}
-                </button>
+              <div className="flex flex-col-reverse sm:flex-row gap-3">
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-2.5 rounded-xl transition"
+                  className="w-full sm:flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-2.5 rounded-xl transition"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="w-full sm:flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold py-2.5 rounded-xl transition disabled:opacity-50"
+                >
+                  {saving ? 'Submitting…' : 'Submit Request'}
                 </button>
               </div>
             </form>

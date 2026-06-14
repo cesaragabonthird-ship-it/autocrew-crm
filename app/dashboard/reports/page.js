@@ -148,29 +148,29 @@ export default function ReportsPage() {
   if (loading) return <div className="flex justify-center py-20"><div className="animate-spin h-8 w-8 border-b-2 border-orange-500 rounded-full"/></div>;
 
   return (
-    <div className="p-8">
-      <div className="flex items-start justify-between mb-7">
+    <div className="p-4 md:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-7">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Reports</h1>
           <p className="text-gray-500 mt-1 text-sm">Sales & performance analytics</p>
         </div>
-        <div className="flex bg-white border border-gray-300 rounded-lg overflow-hidden text-xs">
+        <div className="flex bg-white border border-gray-300 rounded-xl overflow-hidden text-xs w-full sm:w-auto self-start sm:self-auto shadow-sm">
           {['weekly','monthly'].map(p=>(
-            <button key={p} onClick={()=>setPeriod(p)} className={`px-4 py-2 font-medium capitalize transition ${period===p?'bg-orange-500 text-white':'text-gray-600 hover:bg-gray-50'}`}>{p}</button>
+            <button key={p} onClick={()=>setPeriod(p)} className={`flex-1 sm:flex-none text-center px-4 py-2 font-semibold capitalize transition ${period===p?'bg-orange-500 text-white':'text-gray-600 hover:bg-gray-50'}`}>{p}</button>
           ))}
         </div>
       </div>
 
       {/* View tabs */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex gap-2 overflow-x-auto scrollbar-none whitespace-nowrap mb-6 pb-1 -mx-4 md:-mx-8 px-4 md:px-8">
         {Object.keys(TAB_LABELS).map(v => {
           const locked = isTabLocked(v);
           const lockMsg = getTabLockMessage(v);
           return (
-            <div key={v} className="relative group">
+            <div key={v} className="relative group flex-shrink-0">
               <button
                 onClick={() => !locked && setView(v)}
-                className={`px-4 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5 ${
+                className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 flex-shrink-0 ${
                   locked
                     ? 'bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed opacity-50'
                     : view === v
@@ -211,9 +211,9 @@ export default function ReportsPage() {
             <div className="flex items-end gap-2 h-40">
               {(revenueData||[]).map((d,i)=>(
                 <div key={`${period}-${d.week||d.month}-${i}`} className="flex-1 flex flex-col items-center gap-1.5">
-                  <span className="text-xs text-gray-400">{d.revenue>0?fmt(d.revenue):''}</span>
+                  <span className="text-[9px] sm:text-xs text-gray-400">{d.revenue>0?fmt(d.revenue):''}</span>
                   <div className="w-full bg-orange-500 rounded-t-md" style={{height:`${Math.max(4,(d.revenue/maxRev)*140)}px`,opacity:0.5+0.5*(d.revenue/maxRev)}}/>
-                  <span className="text-xs text-gray-400">{d.week||d.month}</span>
+                  <span className="text-[9px] sm:text-xs text-gray-400">{d.week||d.month}</span>
                 </div>
               ))}
             </div>
@@ -242,28 +242,30 @@ export default function ReportsPage() {
       {view==='products' && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-200"><p className="text-sm font-semibold text-gray-900">Top Selling Products</p></div>
-          <table className="w-full">
-            <thead><tr className="bg-gray-50 border-b border-gray-200">{['Rank','Product','Category','Units Sold','Revenue','Share'].map(h=><th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>)}</tr></thead>
-            <tbody className="divide-y divide-gray-100">
-              {(s.topProducts||[]).map((p,i)=>(
-                <tr key={p.name} className="hover:bg-gray-50 transition">
-                  <td className="px-5 py-3">
-                    <div className={`h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold ${i===0?'bg-amber-100 text-amber-700':i===1?'bg-gray-200 text-gray-600':i===2?'bg-orange-100 text-orange-600':'bg-gray-100 text-gray-500'}`}>{i+1}</div>
-                  </td>
-                  <td className="px-5 py-3 text-sm font-medium text-gray-900">{p.name}</td>
-                  <td className="px-5 py-3 text-xs text-gray-500">{p.category}</td>
-                  <td className="px-5 py-3 text-sm font-semibold text-gray-900">{p.unitsSold}</td>
-                  <td className="px-5 py-3 text-sm font-bold text-emerald-700">{fmt(p.revenue)}</td>
-                  <td className="px-5 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 bg-gray-100 rounded-full h-1.5 w-24"><div className="bg-orange-500 h-1.5 rounded-full" style={{width:`${(p.revenue/maxProd)*100}%`}}/></div>
-                      <span className="text-xs text-gray-500">{Math.round((p.revenue/s.totalRevenue)*100)}%</span>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px] text-left">
+              <thead><tr className="bg-gray-50 border-b border-gray-200">{['Rank','Product','Category','Units Sold','Revenue','Share'].map(h=><th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>)}</tr></thead>
+              <tbody className="divide-y divide-gray-100">
+                {(s.topProducts||[]).map((p,i)=>(
+                  <tr key={p.name} className="hover:bg-gray-50 transition">
+                    <td className="px-5 py-3">
+                      <div className={`h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold ${i===0?'bg-amber-100 text-amber-700':i===1?'bg-gray-200 text-gray-600':i===2?'bg-orange-100 text-orange-600':'bg-gray-100 text-gray-500'}`}>{i+1}</div>
+                    </td>
+                    <td className="px-5 py-3 text-sm font-medium text-gray-900">{p.name}</td>
+                    <td className="px-5 py-3 text-xs text-gray-500">{p.category}</td>
+                    <td className="px-5 py-3 text-sm font-semibold text-gray-900">{p.unitsSold}</td>
+                    <td className="px-5 py-3 text-sm font-bold text-emerald-700">{fmt(p.revenue)}</td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-gray-100 rounded-full h-1.5 w-24"><div className="bg-orange-500 h-1.5 rounded-full" style={{width:`${(p.revenue/maxProd)*100}%`}}/></div>
+                        <span className="text-xs text-gray-500">{Math.round((p.revenue/s.totalRevenue)*100)}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -271,33 +273,35 @@ export default function ReportsPage() {
       {view==='installers' && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-200"><p className="text-sm font-semibold text-gray-900">Installer Performance</p></div>
-          <table className="w-full">
-            <thead><tr className="bg-gray-50 border-b border-gray-200">{['Installer','Jobs Done','Revenue Generated','Avg Job Value','Share'].map(h=><th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>)}</tr></thead>
-            <tbody className="divide-y divide-gray-100">
-              {(s.topInstallers||[]).map((inst,i)=>{
-                const maxJobs = Math.max(...s.topInstallers.map(t=>t.jobsCompleted));
-                return (
-                  <tr key={inst.name} className="hover:bg-gray-50 transition">
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-sm">{inst.name.charAt(0)}</div>
-                        <span className="text-sm font-semibold text-gray-900">{inst.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3 text-sm font-bold text-gray-900">{inst.jobsCompleted}</td>
-                    <td className="px-5 py-3 text-sm font-bold text-emerald-700">{fmt(inst.revenue)}</td>
-                    <td className="px-5 py-3 text-sm text-gray-600">₱{inst.avgJobValue.toLocaleString()}</td>
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-gray-100 rounded-full h-2 w-28"><div className="bg-orange-500 h-2 rounded-full" style={{width:`${(inst.jobsCompleted/maxJobs)*100}%`}}/></div>
-                        <span className="text-xs text-gray-500">{Math.round((inst.jobsCompleted/s.totalJobs)*100)}%</span>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px] text-left">
+              <thead><tr className="bg-gray-50 border-b border-gray-200">{['Installer','Jobs Done','Revenue Generated','Avg Job Value','Share'].map(h=><th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>)}</tr></thead>
+              <tbody className="divide-y divide-gray-100">
+                {(s.topInstallers||[]).map((inst,i)=>{
+                  const maxJobs = Math.max(...s.topInstallers.map(t=>t.jobsCompleted));
+                  return (
+                    <tr key={inst.name} className="hover:bg-gray-50 transition">
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-sm">{inst.name.charAt(0)}</div>
+                          <span className="text-sm font-semibold text-gray-900">{inst.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-sm font-bold text-gray-900">{inst.jobsCompleted}</td>
+                      <td className="px-5 py-3 text-sm font-bold text-emerald-700">{fmt(inst.revenue)}</td>
+                      <td className="px-5 py-3 text-sm text-gray-600">₱{inst.avgJobValue.toLocaleString()}</td>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 bg-gray-100 rounded-full h-2 w-28"><div className="bg-orange-500 h-2 rounded-full" style={{width:`${(inst.jobsCompleted/maxJobs)*100}%`}}/></div>
+                          <span className="text-xs text-gray-500">{Math.round((inst.jobsCompleted/s.totalJobs)*100)}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -454,29 +458,31 @@ export default function ReportsPage() {
             {/* Table Details */}
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-200"><p className="text-sm font-semibold text-gray-900">Historical Financial Performance</p></div>
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    {['Month','Gross Revenue','Product COGS','Installer Commissions','Net Profit','Margin'].map(h => (
-                      <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {(s.monthlyProfit||[]).map(p => (
-                    <tr key={p.month} className="hover:bg-gray-50 transition">
-                      <td className="px-5 py-3.5 text-sm font-bold text-gray-900">{p.month}</td>
-                      <td className="px-5 py-3.5 text-sm font-semibold text-gray-800">{fmt(p.revenue)}</td>
-                      <td className="px-5 py-3.5 text-sm text-gray-500">{fmt(p.cogs)}</td>
-                      <td className="px-5 py-3.5 text-sm text-gray-500">{fmt(p.commissions)}</td>
-                      <td className="px-5 py-3.5 text-sm font-bold text-emerald-700">{fmt(p.netProfit)}</td>
-                      <td className="px-5 py-3.5">
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${p.margin >= 50 ? 'bg-emerald-100 text-emerald-700' : p.margin >= 30 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>{p.margin}%</span>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[780px] text-left">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      {['Month','Gross Revenue','Product COGS','Installer Commissions','Net Profit','Margin'].map(h => (
+                        <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {(s.monthlyProfit||[]).map(p => (
+                      <tr key={p.month} className="hover:bg-gray-50 transition">
+                        <td className="px-5 py-3.5 text-sm font-bold text-gray-900">{p.month}</td>
+                        <td className="px-5 py-3.5 text-sm font-semibold text-gray-800">{fmt(p.revenue)}</td>
+                        <td className="px-5 py-3.5 text-sm text-gray-500">{fmt(p.cogs)}</td>
+                        <td className="px-5 py-3.5 text-sm text-gray-500">{fmt(p.commissions)}</td>
+                        <td className="px-5 py-3.5 text-sm font-bold text-emerald-700">{fmt(p.netProfit)}</td>
+                        <td className="px-5 py-3.5">
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${p.margin >= 50 ? 'bg-emerald-100 text-emerald-700' : p.margin >= 30 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>{p.margin}%</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         );

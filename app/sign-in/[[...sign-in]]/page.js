@@ -27,7 +27,7 @@ export default function SignInPage() {
         <div className="text-center mt-4 space-y-1">
           <p className="text-white/30 text-xs">
             Installer?{' '}
-            <a href="/installer" className="text-white/50 hover:text-white underline">Open Installer Portal</a>
+            <a href="/portal" className="text-white/50 hover:text-white underline">Open Installer Portal</a>
           </p>
           <p className="text-white/30 text-xs">
             Staff member?{' '}

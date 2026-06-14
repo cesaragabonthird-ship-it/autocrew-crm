@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { poAPI, productsAPI, branchesAPI } from '@/lib/convex-api';
 import { useUser } from '@/lib/UserContext';
 import { PO_STATUSES, PRODUCT_CATEGORIES } from '@/lib/constants';
-import { Plus, Search, X, ShoppingCart, Edit2, Trash2, ChevronRight, Check, Package } from 'lucide-react';
+import { Plus, Search, X, ShoppingCart, Edit2, Trash2, ChevronRight, Check, Package, ChevronDown } from 'lucide-react';
 import UpgradeOverlay from '@/components/UpgradeOverlay';
 
 const MOCK_POS = [
@@ -31,6 +31,11 @@ export default function PurchaseOrdersPage() {
   const [detail, setDetail]       = useState(null);
   const [showReceive, setShowReceive] = useState(null);
   const [receiveQtys, setReceiveQtys] = useState({});
+  const [page, setPage]           = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, search]);
 
   useEffect(() => {
     let alive = true;
@@ -143,6 +148,10 @@ export default function PurchaseOrdersPage() {
     return ms&&mq;
   });
 
+  const ITEMS_PER_PAGE = 10;
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated = filtered.slice((page-1)*ITEMS_PER_PAGE, page*ITEMS_PER_PAGE);
+
   const totalOrdered  = orders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+o.totalCost,0);
   const pendingValue  = orders.filter(o=>['ordered','partial'].includes(o.status)).reduce((s,o)=>s+o.totalCost,0);
 
@@ -159,85 +168,159 @@ export default function PurchaseOrdersPage() {
   const isStarter = profile?.plan === 'starter';
 
   const pageContent = (
-    <div className="p-8">
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Purchase Orders</h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            {orders.length} orders · <span className="text-gray-700 font-medium">₱{pendingValue.toLocaleString()} pending delivery</span>
-          </p>
+    <div className="p-4 md:p-8">
+      {/* Sticky Header & Filter Container */}
+      <div className="sticky top-0 bg-gray-50/95 backdrop-blur-sm z-10 -mx-4 md:-mx-8 px-4 md:px-8 pt-2 pb-4 border-b border-gray-200/60 mb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Purchase Orders</h1>
+            <p className="text-gray-500 mt-1 text-sm">
+              {orders.length} orders · <span className="text-gray-700 font-medium">₱{pendingValue.toLocaleString()} pending delivery</span>
+            </p>
+          </div>
+          <button onClick={openAdd} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition">
+            <Plus size={17}/> New PO
+          </button>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition">
-          <Plus size={17}/> New PO
-        </button>
-      </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-5">
-        <div className="flex gap-1.5">
-          {['all',...Object.keys(PO_STATUSES)].map(s => (
-            <button key={s} onClick={()=>setStatus(s)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition ${statusFilter===s?'bg-orange-500 text-white':'bg-white border border-gray-300 text-gray-600 hover:border-orange-300'}`}>
-              {s==='all'?'All':PO_STATUSES[s]?.label}
-            </button>
-          ))}
-        </div>
-        <div className="relative flex-1 min-w-48">
-          <Search size={14} className="absolute left-3 top-2.5 text-gray-400"/>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search PO number, supplier…"
-            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"/>
-          {search && <button onClick={()=>setSearch('')} className="absolute right-3 top-2.5 text-gray-400"><X size={14}/></button>}
+        {/* Filters (Segmented Control + Filter Dropdown) */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
+          {/* Mobile Filter Row */}
+          <div className="flex gap-2 w-full sm:hidden">
+            <div className="bg-gray-100 p-1 rounded-xl flex flex-1">
+              {[{k:'all',l:'All'},{k:'ordered',l:'Ordered'},{k:'received',l:'Received'}].map(ft=>(
+                <button
+                  key={ft.k}
+                  onClick={()=>setStatus(ft.k)}
+                  className={`flex-1 py-1.5 text-center rounded-lg text-xs font-semibold transition-all duration-200 ${
+                    statusFilter===ft.k
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  {ft.l}
+                </button>
+              ))}
+            </div>
+            
+            <div className="relative flex-shrink-0">
+              <select
+                value={['all','ordered','received'].includes(statusFilter) ? 'all' : statusFilter}
+                onChange={e=>setStatus(e.target.value)}
+                className="appearance-none bg-white border border-gray-300 rounded-xl pl-3.5 pr-8 py-2 text-xs font-semibold text-gray-700 focus:outline-none cursor-pointer h-full"
+              >
+                <option value="all">More</option>
+                <option value="draft">Draft</option>
+                <option value="partial">Partial</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-gray-500">
+                <ChevronDown size={14} />
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Filter Row */}
+          <div className="hidden sm:flex gap-1.5">
+            {['all',...Object.keys(PO_STATUSES)].map(s => (
+              <button key={s} onClick={()=>setStatus(s)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition ${statusFilter===s?'bg-orange-500 text-white':'bg-white border border-gray-300 text-gray-600 hover:border-orange-300'}`}>
+                {s==='all'?'All':PO_STATUSES[s]?.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative flex-1">
+            <Search size={14} className="absolute left-3 top-3 sm:top-2.5 text-gray-400"/>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search PO number, supplier…"
+              className="w-full pl-9 pr-8 py-2 sm:py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"/>
+            {search && <button onClick={()=>setSearch('')} className="absolute right-3 top-3 sm:top-2.5 text-gray-400"><X size={14}/></button>}
+          </div>
         </div>
       </div>
 
       {/* PO Cards */}
       {loading ? <div className="flex justify-center py-20"><div className="animate-spin h-8 w-8 border-b-2 border-orange-500 rounded-full"/></div> : (
-        <div className="space-y-3">
-          {filtered.length===0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 py-16 text-center">
-              <ShoppingCart size={40} className="mx-auto text-gray-300 mb-3"/>
-              <p className="text-gray-500 text-sm">No purchase orders found</p>
-              <button onClick={openAdd} className="mt-3 text-orange-500 text-sm font-medium hover:underline">Create one</button>
-            </div>
-          ) : filtered.map(o => {
-            const sm = PO_STATUSES[o.status] || PO_STATUSES.draft;
-            const received = o.items.every(i=>(i.received||0)>=i.qty);
-            return (
-              <div key={o.id} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm transition">
-                <div className="flex items-start gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-xs font-mono text-gray-400">{o.poNumber}</span>
-                      <h3 className="font-semibold text-gray-900 text-sm">{o.supplier}</h3>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${sm.cls}`}>{sm.label}</span>
-                      <span className="ml-auto font-bold text-gray-900">₱{o.totalCost.toLocaleString()}</span>
+        <div>
+          <div className="space-y-3">
+            {filtered.length===0 ? (
+              <div className="bg-white rounded-xl border border-gray-200 py-16 text-center">
+                <ShoppingCart size={40} className="mx-auto text-gray-300 mb-3"/>
+                <p className="text-gray-500 text-sm">No purchase orders found</p>
+                <button onClick={openAdd} className="mt-3 text-orange-500 text-sm font-medium hover:underline">Create one</button>
+              </div>
+            ) : paginated.map(o => {
+              const sm = PO_STATUSES[o.status] || PO_STATUSES.draft;
+              return (
+                <div key={o.id || o._id} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 hover:shadow-sm transition flex flex-col gap-3 cursor-pointer" onClick={()=>setDetail(o)}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="text-xs font-mono text-gray-400">{o.poNumber}</span>
+                        <h3 className="font-semibold text-gray-900 text-sm truncate">{o.supplier}</h3>
+                      </div>
+                      <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-lg ${sm.cls}`}>{sm.label}</span>
                     </div>
-                    <div className="flex flex-wrap gap-x-4 text-xs text-gray-500 mb-2">
+                    
+                    <div className="text-right flex-shrink-0 flex flex-col items-end">
+                      <span className="font-bold text-gray-900 text-sm sm:text-base">₱{o.totalCost.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 text-xs text-gray-500 border-t border-gray-100/60 pt-2.5">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
                       <span>Branch: {o.branch}</span>
                       <span>Ordered: {o.orderDate}</span>
-                      {o.receivedDate && <span className="text-emerald-600">Received: {o.receivedDate}</span>}
                     </div>
-                    {/* Items preview */}
-                    <div className="flex flex-wrap gap-2">
-                      {o.items.slice(0,3).map((item,i) => (
-                        <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                    {o.receivedDate && (
+                      <div className="text-emerald-600 font-medium">Received: {o.receivedDate}</div>
+                    )}
+                  </div>
+
+                  {/* Items preview & actions */}
+                  <div className="flex items-center justify-between gap-2 border-t border-gray-100/60 pt-2.5 mt-0.5">
+                    <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
+                      {o.items.slice(0,2).map((item,i) => (
+                        <span key={i} className="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-lg truncate max-w-[120px]">
                           {item.name} ×{item.qty}
-                          {item.received>0 && <span className="text-emerald-600"> ({item.received} rcvd)</span>}
+                          {item.received>0 && <span className="text-emerald-600 font-medium"> ({item.received} rcvd)</span>}
                         </span>
                       ))}
-                      {o.items.length>3 && <span className="text-xs text-gray-400">+{o.items.length-3} more</span>}
+                      {o.items.length>2 && <span className="text-xs text-gray-400 flex-shrink-0">+{o.items.length-2} more</span>}
+                    </div>
+                    
+                    <div className="flex items-center gap-1.5 flex-shrink-0" onClick={e=>e.stopPropagation()}>
+                      <button onClick={()=>openEdit(o)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition"><Edit2 size={13}/></button>
+                      <button onClick={()=>handleDelete(o.id || o._id)} className="p-1.5 hover:bg-rose-50 rounded-md text-gray-400 hover:text-rose-600 transition"><Trash2 size={13}/></button>
+                      <button onClick={()=>setDetail(o)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition"><ChevronRight size={15}/></button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    {/* No send order/receive buttons as PO is just a record here */}
-                    <button onClick={()=>setDetail(o)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700"><ChevronRight size={16}/></button>
-                    <button onClick={()=>openEdit(o)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700"><Edit2 size={14}/></button>
-                    <button onClick={()=>handleDelete(o.id)} className="p-1.5 hover:bg-red-50 rounded-md text-gray-400 hover:text-red-600"><Trash2 size={14}/></button>
-                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4 mt-2">
+              <button
+                disabled={page === 1}
+                onClick={()=>setPage(p=>Math.max(1, p-1))}
+                className="px-3.5 py-1.5 rounded-lg border border-gray-300 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                Previous
+              </button>
+              <span className="text-xs text-gray-500 font-medium">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                disabled={page === totalPages}
+                onClick={()=>setPage(p=>Math.min(totalPages, p+1))}
+                className="px-3.5 py-1.5 rounded-lg border border-gray-300 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -269,8 +352,8 @@ export default function PurchaseOrdersPage() {
               </div>
               <div>
                 <p className="text-xs font-semibold text-gray-700 uppercase mb-2">Items</p>
-                <div className="border border-gray-200 rounded-xl overflow-hidden">
-                  <table className="w-full text-sm">
+                <div className="border border-gray-200 rounded-xl overflow-hidden overflow-x-auto">
+                  <table className="w-full text-sm min-w-[360px]">
                     <thead><tr className="bg-gray-50 border-b border-gray-200"><th className="px-3 py-2 text-left text-xs text-gray-500">Product</th><th className="px-3 py-2 text-right text-xs text-gray-500">Ordered</th><th className="px-3 py-2 text-right text-xs text-gray-500">Received</th><th className="px-3 py-2 text-right text-xs text-gray-500">Total</th></tr></thead>
                     <tbody className="divide-y divide-gray-100">
                       {detail.items.map((item,i) => (

@@ -45,7 +45,7 @@ export default function InstallerJobDetail() {
       await jobsAPI.updateStatus(id, newStatus, completionNote);
       if (newStatus === 'completed') {
         setShowComplete(false);
-        router.push('/installer');
+        router.push('/portal?tab=jobs');
       }
     } catch (err) {
       alert(err.message || 'Failed to update status.');

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { deliveriesAPI, productsAPI, branchesAPI, poAPI } from '@/lib/convex-api';
 import { useUser } from '@/lib/UserContext';
 import { DELIVERY_STATUSES } from '@/lib/constants';
-import { Plus, Search, X, Truck, Check, AlertCircle, ChevronRight, Edit2, Package, Trash2 } from 'lucide-react';
+import { Plus, Search, X, Truck, Check, AlertCircle, ChevronRight, Edit2, Package, Trash2, ChevronDown } from 'lucide-react';
 import UpgradeOverlay from '@/components/UpgradeOverlay';
 
 const MOCK = [
@@ -29,6 +29,11 @@ export default function DeliveriesPage() {
   const [saving, setSaving]         = useState(false);
   const [detail, setDetail]         = useState(null);
   const [purchaseOrders, setPOs]    = useState([]);
+  const [page, setPage]             = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, search]);
 
   useEffect(() => {
     let alive = true;
@@ -129,6 +134,10 @@ export default function DeliveriesPage() {
     return ms&&mq;
   });
 
+  const ITEMS_PER_PAGE = 10;
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated = filtered.slice((page-1)*ITEMS_PER_PAGE, page*ITEMS_PER_PAGE);
+
   const uniqueProducts = [];
   const seenProducts = new Set();
   for (const p of products) {
@@ -142,92 +151,169 @@ export default function DeliveriesPage() {
   const isStarter = profile?.plan === 'starter';
 
   const pageContent = (
-    <div className="p-8">
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Deliveries</h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            {deliveries.filter(d=>d.status==='pending').length} pending · {deliveries.filter(d=>d.status==='received').length} received
-          </p>
+    <div className="p-4 md:p-8">
+      {/* Sticky Header & Filter Container */}
+      <div className="sticky top-0 bg-gray-50/95 backdrop-blur-sm z-10 -mx-4 md:-mx-8 px-4 md:px-8 pt-2 pb-4 border-b border-gray-200/60 mb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Deliveries</h1>
+            <p className="text-gray-500 mt-1 text-sm">
+              {deliveries.filter(d=>d.status==='pending').length} pending · {deliveries.filter(d=>d.status==='received').length} received
+            </p>
+          </div>
+          <button onClick={openAdd} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition">
+            <Plus size={17}/> Record Delivery
+          </button>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition">
-          <Plus size={17}/> Record Delivery
-        </button>
-      </div>
 
-      <div className="flex flex-wrap gap-3 mb-5">
-        <div className="flex gap-1.5">
-          {['all',...Object.keys(DELIVERY_STATUSES)].map(s=>(
-            <button key={s} onClick={()=>setStatus(s)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${statusFilter===s?'bg-orange-500 text-white':'bg-white border border-gray-300 text-gray-600 hover:border-orange-300'}`}>
-              {s==='all'?'All':DELIVERY_STATUSES[s]?.label}
-            </button>
-          ))}
-        </div>
-        <div className="relative flex-1 min-w-44">
-          <Search size={14} className="absolute left-3 top-2.5 text-gray-400"/>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search supplier, PO number…" className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"/>
-          {search && <button onClick={()=>setSearch('')} className="absolute right-3 top-2.5 text-gray-400"><X size={14}/></button>}
+        {/* Filters */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
+          {/* Mobile Filter Row */}
+          <div className="flex gap-2 w-full sm:hidden">
+            <div className="bg-gray-100 p-1 rounded-xl flex flex-1">
+              {[{k:'all',l:'All'},{k:'pending',l:'Pending'},{k:'received',l:'Received'}].map(ft=>(
+                <button
+                  key={ft.k}
+                  onClick={()=>setStatus(ft.k)}
+                  className={`flex-1 py-1.5 text-center rounded-lg text-xs font-semibold transition-all duration-200 ${
+                    statusFilter===ft.k
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  {ft.l}
+                </button>
+              ))}
+            </div>
+            
+            <div className="relative flex-shrink-0">
+              <select
+                value={['all','pending','received'].includes(statusFilter) ? 'all' : statusFilter}
+                onChange={e=>setStatus(e.target.value)}
+                className="appearance-none bg-white border border-gray-300 rounded-xl pl-3.5 pr-8 py-2 text-xs font-semibold text-gray-700 focus:outline-none cursor-pointer h-full"
+              >
+                <option value="all">More</option>
+                <option value="partial">Partial</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-gray-500">
+                <ChevronDown size={14} />
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Filter Row */}
+          <div className="hidden sm:flex gap-1.5">
+            {['all',...Object.keys(DELIVERY_STATUSES)].map(s=>(
+              <button key={s} onClick={()=>setStatus(s)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${statusFilter===s?'bg-orange-500 text-white':'bg-white border border-gray-300 text-gray-600 hover:border-orange-300'}`}>
+                {s==='all'?'All':DELIVERY_STATUSES[s]?.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative flex-1">
+            <Search size={14} className="absolute left-3 top-3 sm:top-2.5 text-gray-400"/>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search supplier, PO number…" className="w-full pl-9 pr-8 py-2 sm:py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"/>
+            {search && <button onClick={()=>setSearch('')} className="absolute right-3 top-3 sm:top-2.5 text-gray-400"><X size={14}/></button>}
+          </div>
         </div>
       </div>
 
       {loading ? <div className="flex justify-center py-20"><div className="animate-spin h-8 w-8 border-b-2 border-orange-500 rounded-full"/></div> : (
-        <div className="space-y-3">
-          {filtered.length===0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 py-16 text-center">
-              <Truck size={40} className="mx-auto text-gray-300 mb-3"/>
-              <p className="text-gray-500 text-sm">No deliveries found</p>
-            </div>
-          ) : filtered.map(d => {
-            const sm = DELIVERY_STATUSES[d.status] || DELIVERY_STATUSES.pending;
-            const totalExpected = d.items.reduce((s,i)=>s+i.qtyExpected,0);
-            const totalReceived = d.items.reduce((s,i)=>s+(i.qtyReceived||0),0);
-            return (
-              <div key={d.id} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm transition">
-                <div className="flex items-start gap-4">
-                  <div className="h-10 w-10 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
-                    <Truck size={18} className="text-orange-600"/>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-xs font-mono text-gray-400">{d.deliveryNumber}</span>
-                      <h3 className="font-semibold text-gray-900 text-sm">{d.supplier}</h3>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${sm.cls}`}>{sm.label}</span>
+        <div>
+          <div className="space-y-3">
+            {filtered.length===0 ? (
+              <div className="bg-white rounded-xl border border-gray-200 py-16 text-center">
+                <Truck size={40} className="mx-auto text-gray-300 mb-3"/>
+                <p className="text-gray-500 text-sm">No deliveries found</p>
+              </div>
+            ) : paginated.map(d => {
+              const sm = DELIVERY_STATUSES[d.status] || DELIVERY_STATUSES.pending;
+              const totalExpected = d.items.reduce((s,i)=>s+i.qtyExpected,0);
+              const totalReceived = d.items.reduce((s,i)=>s+(i.qtyReceived||0),0);
+              return (
+                <div key={d.id || d._id} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 hover:shadow-sm transition flex flex-col gap-3 cursor-pointer" onClick={()=>setDetail(d)}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="hidden sm:flex h-10 w-10 rounded-xl bg-orange-100 items-center justify-center flex-shrink-0">
+                        <Truck size={18} className="text-orange-600"/>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className="text-xs font-mono text-gray-400">{d.deliveryNumber}</span>
+                          <h3 className="font-semibold text-gray-900 text-sm truncate">{d.supplier}</h3>
+                        </div>
+                        <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-lg ${sm.cls}`}>{sm.label}</span>
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-x-4 text-xs text-gray-500 mb-2">
-                      {d.poNumber && <span>PO: {d.poNumber}</span>}
+                    <div className="text-right flex-shrink-0 text-xs text-gray-500">
+                      {d.poNumber && <div className="font-medium text-gray-900">PO: {d.poNumber}</div>}
+                      <div>Date: {d.deliveryDate}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2 text-xs text-gray-500 border-t border-gray-100/60 pt-2.5 mt-1">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
                       <span>Branch: {d.branch}</span>
-                      <span>Date: {d.deliveryDate}</span>
-                      {d.receivedBy && <span>By: {d.receivedBy}</span>}
+                      {d.receivedBy && <span>Received by: {d.receivedBy}</span>}
                     </div>
                     {/* Progress bar */}
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex-1 bg-gray-200 rounded-full h-1.5">
-                        <div className="bg-emerald-500 h-1.5 rounded-full" style={{width:`${totalExpected>0?(totalReceived/totalExpected)*100:0}%`}}/>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 bg-gray-100 rounded-full h-1.5">
+                        <div className="bg-emerald-500 h-1.5 rounded-full transition-all duration-300" style={{width:`${totalExpected>0?(totalReceived/totalExpected)*100:0}%`}}/>
                       </div>
-                      <span className="text-xs text-gray-500">{totalReceived}/{totalExpected} items</span>
+                      <span className="text-[11px] text-gray-500 font-medium flex-shrink-0">{totalReceived}/{totalExpected} items</span>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {d.items.map((item,i)=>(
-                        <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                          {item.name} <span className={item.qtyReceived>=item.qtyExpected?'text-emerald-600':'text-amber-600'}>{item.qtyReceived}/{item.qtyExpected}</span>
+                  </div>
+
+                  {/* Items preview & actions */}
+                  <div className="flex items-center justify-between gap-2 border-t border-gray-100/60 pt-2.5 mt-1">
+                    <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
+                      {d.items.slice(0, 2).map((item,i)=>(
+                        <span key={i} className="text-[11px] bg-gray-50 text-gray-600 px-2 py-0.5 rounded-lg truncate max-w-[120px]">
+                          {item.name} <span className={item.qtyReceived>=item.qtyExpected?'text-emerald-600 font-semibold':'text-amber-600 font-semibold'}>{item.qtyReceived}/{item.qtyExpected}</span>
                         </span>
                       ))}
+                      {d.items.length > 2 && <span className="text-[11px] text-gray-400 flex-shrink-0">+{d.items.length - 2} more</span>}
+                    </div>
+                    
+                    <div className="flex items-center gap-1.5 flex-shrink-0" onClick={e=>e.stopPropagation()}>
+                      {d.status==='pending' && (
+                        <button onClick={()=>markReceived(d)} className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] px-2.5 py-1.5 rounded-lg font-medium transition shadow-sm">
+                          <Check size={12}/> <span>Receive All</span>
+                        </button>
+                      )}
+                      <button onClick={()=>openEdit(d)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition"><Edit2 size={13}/></button>
+                      <button onClick={()=>handleDelete(d.id || d._id)} className="p-1.5 hover:bg-rose-50 rounded-md text-gray-400 hover:text-rose-600 transition"><Trash2 size={13}/></button>
+                      <button onClick={()=>setDetail(d)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition"><ChevronRight size={15}/></button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    {d.status==='pending' && (
-                      <button onClick={()=>markReceived(d)} className="flex items-center gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg font-medium transition">
-                        <Check size={13}/> Receive All
-                      </button>
-                    )}
-                    <button onClick={()=>setDetail(d)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700"><ChevronRight size={16}/></button>
-                    <button onClick={()=>openEdit(d)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700"><Edit2 size={14}/></button>
-                    <button onClick={()=>handleDelete(d.id || d._id)} className="p-1.5 hover:bg-red-50 rounded-md text-gray-400 hover:text-red-600"><Trash2 size={14}/></button>
-                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4 mt-2">
+              <button
+                disabled={page === 1}
+                onClick={()=>setPage(p=>Math.max(1, p-1))}
+                className="px-3.5 py-1.5 rounded-lg border border-gray-300 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                Previous
+              </button>
+              <span className="text-xs text-gray-500 font-medium">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                disabled={page === totalPages}
+                onClick={()=>setPage(p=>Math.min(totalPages, p+1))}
+                className="px-3.5 py-1.5 rounded-lg border border-gray-300 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
 

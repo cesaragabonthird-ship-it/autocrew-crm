@@ -5,7 +5,7 @@ import { teamAPI, branchesAPI } from '@/lib/convex-api';
 import { useUser } from '@/lib/UserContext';
 import { ROLES, ROLE_LABELS } from '@/lib/constants';
 import AccessDenied from '@/components/AccessDenied';
-import { Plus, Search, X, Users, Edit2, Trash2, Phone, Mail, UserCheck, Shield, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Plus, Search, X, Users, Edit2, Trash2, Phone, Mail, UserCheck, Shield, AlertCircle, CheckCircle2, ChevronDown } from 'lucide-react';
 
 const MOCK = [
   { id:'tm1', name:'Alex Cruz',     email:'alex@shop.com',  phone:'09171111111', role:'installer',      branch:'Main Branch',  status:'active', jobsCompleted:28, notes:'Senior installer. Specializes in audio.' },
@@ -40,6 +40,11 @@ export default function TeamPage() {
   const [detail, setDetail]     = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [toast, setToast]       = useState({ show: false, message: '', type: 'success' });
+  const [page, setPage]         = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [roleFilter, search]);
 
   useEffect(() => {
     if (toast.show) {
@@ -183,77 +188,157 @@ export default function TeamPage() {
   const installers = members.filter(m=>m.role==='installer');
   const activeCount = members.filter(m=>m.status==='active').length;
 
+  const ITEMS_PER_PAGE = 10;
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1;
+  const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [filtered.length, totalPages, page]);
+
   return (
-    <div className="p-8">
-      <div className="flex items-start justify-between mb-6">
+    <div className="p-4 md:p-8">
+      {/* Header (Non-sticky) */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4 mt-2">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Team</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Team</h1>
           <p className="text-gray-500 mt-1 text-sm">{members.length} members · {activeCount} active · {installers.length} installers</p>
         </div>
         {!isReadOnly && (
-          <button onClick={openAdd} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition">
+          <button onClick={openAdd} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition">
             <Plus size={17}/> Add Member
           </button>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-3 mb-5">
-        <div className="flex gap-1.5 flex-wrap">
-          {['all',...Object.values(ROLES)].map(r=>(
-            <button key={r} onClick={()=>setRole(r)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${roleFilter===r?'bg-orange-500 text-white':'bg-white border border-gray-300 text-gray-600 hover:border-orange-300'}`}>
-              {r==='all'?'All':ROLE_LABELS[r]}
-            </button>
-          ))}
-        </div>
-        <div className="relative flex-1 min-w-44">
-          <Search size={14} className="absolute left-3 top-2.5 text-gray-400"/>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search name, email, branch…" className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"/>
-          {search && <button onClick={()=>setSearch('')} className="absolute right-3 top-2.5 text-gray-400"><X size={14}/></button>}
+      {/* Sticky Filters & Search Container */}
+      <div className="sticky top-0 bg-gray-50/95 backdrop-blur-sm z-10 -mx-4 md:-mx-8 px-4 md:px-8 pt-2 pb-4 border-b border-gray-200/60 mb-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
+          {/* Mobile Filter Row */}
+          <div className="flex gap-2 w-full sm:hidden">
+            <div className="bg-gray-100 p-1 rounded-xl flex flex-1">
+              {[{k:'all',l:'All'},{k:'installer',l:'Installer'},{k:'sales_staff',l:'Sales Staff'}].map(ft=>(
+                <button
+                  key={ft.k}
+                  onClick={()=>{ setRole(ft.k); setPage(1); }}
+                  className={`flex-1 py-1.5 text-center rounded-lg text-xs font-semibold transition-all duration-200 ${
+                    roleFilter===ft.k
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  {ft.l}
+                </button>
+              ))}
+            </div>
+            
+            <div className="relative flex-shrink-0">
+              <select
+                value={['all','installer','sales_staff'].includes(roleFilter) ? 'all' : roleFilter}
+                onChange={e=>{ setRole(e.target.value); setPage(1); }}
+                className="appearance-none bg-white border border-gray-300 rounded-xl pl-3.5 pr-8 py-2 text-xs font-semibold text-gray-700 focus:outline-none cursor-pointer h-full"
+              >
+                <option value="all">More</option>
+                <option value="super_admin">Super Admin</option>
+                <option value="branch_manager">Branch Manager</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-gray-500">
+                <ChevronDown size={14} />
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Filter Row */}
+          <div className="hidden sm:flex gap-1.5 flex-wrap">
+            {['all',...Object.values(ROLES)].map(r=>(
+              <button key={r} onClick={()=>{ setRole(r); setPage(1); }} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${roleFilter===r?'bg-orange-500 text-white':'bg-white border border-gray-300 text-gray-600 hover:border-orange-300'}`}>
+                {r==='all'?'All':ROLE_LABELS[r]}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative flex-1">
+            <Search size={14} className="absolute left-3 top-3 sm:top-2.5 text-gray-400"/>
+            <input value={search} onChange={e=>{ setSearch(e.target.value); setPage(1); }} placeholder="Search name, email, branch…" className="w-full pl-9 pr-8 py-2 sm:py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"/>
+            {search && <button onClick={()=>{ setSearch(''); setPage(1); }} className="absolute right-3 top-3 sm:top-2.5 text-gray-400"><X size={14}/></button>}
+          </div>
         </div>
       </div>
 
       {loading ? <div className="flex justify-center py-20"><div className="animate-spin h-8 w-8 border-b-2 border-orange-500 rounded-full"/></div> : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.length===0 ? (
-            <div className="col-span-3 bg-white rounded-xl border border-gray-200 py-16 text-center"><Users size={40} className="mx-auto text-gray-300 mb-3"/><p className="text-gray-500 text-sm">No team members found</p></div>
-          ) : filtered.map(m=>(
-            <div key={m.id} className={`bg-white rounded-xl border p-5 hover:shadow-sm transition ${m.status==='inactive'?'opacity-60 border-gray-200':'border-gray-200'}`}>
-              <div className="flex items-start gap-3 mb-4">
-                <div className="h-11 w-11 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-lg flex-shrink-0">{m.name.charAt(0)}</div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 truncate">{m.name}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${ROLE_COLORS[m.role]||'bg-gray-100 text-gray-600'}`}>{ROLE_LABELS[m.role]||m.role}</span>
-                    {m.status==='inactive' && <span className="text-xs text-gray-400">Inactive</span>}
+        <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filtered.length===0 ? (
+              <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-white rounded-xl border border-gray-200 py-16 text-center">
+                <Users size={40} className="mx-auto text-gray-300 mb-3"/>
+                <p className="text-gray-500 text-sm">No team members found</p>
+              </div>
+            ) : paginated.map(m=>(
+              <div key={m.id || m._id} className={`bg-white rounded-xl border p-5 hover:shadow-sm transition flex flex-col justify-between ${m.status==='inactive'?'opacity-60 border-gray-200 bg-gray-50/50':'border-gray-200'}`}>
+                <div>
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="h-11 w-11 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-lg flex-shrink-0">{m.name.charAt(0)}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 truncate">{m.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${ROLE_COLORS[m.role]||'bg-gray-100 text-gray-600'}`}>{ROLE_LABELS[m.role]||m.role}</span>
+                        {m.status==='inactive' && <span className="text-xs text-gray-400">Inactive</span>}
+                      </div>
+                    </div>
+                    {!isReadOnly && (
+                      <div className="flex gap-1">
+                        <button onClick={()=>openEdit(m)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition"><Edit2 size={14}/></button>
+                        <button onClick={()=>handleDelete(m.id || m._id)} className="p-1.5 hover:bg-red-50 rounded-md text-gray-400 hover:text-red-600 transition"><Trash2 size={14}/></button>
+                      </div>
+                    )}
                   </div>
+                  <div className="space-y-1.5 text-xs text-gray-500">
+                    <p className="flex items-center gap-1.5"><Phone size={12}/>{m.phone || '—'}</p>
+                    <p className="flex items-center gap-1.5"><Mail size={12}/>{m.email}</p>
+                    <p className="flex items-center gap-1.5"><Shield size={12}/>{m.branch || m.branchName}</p>
+                    {m.role==='installer' && <p className="flex items-center gap-1.5"><UserCheck size={12}/>{m.jobsCompleted} jobs completed</p>}
+                  </div>
+                  {m.notes && <p className="text-xs text-gray-400 italic mt-3 line-clamp-2">{m.notes}</p>}
                 </div>
-                {!isReadOnly && (
-                  <div className="flex gap-1">
-                    <button onClick={()=>openEdit(m)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700"><Edit2 size={14}/></button>
-                    <button onClick={()=>handleDelete(m.id)} className="p-1.5 hover:bg-red-50 rounded-md text-gray-400 hover:text-red-600"><Trash2 size={14}/></button>
-                  </div>
-                )}
+                <div className="mt-4 pt-3 border-t border-gray-100">
+                  {!isReadOnly ? (
+                    <button onClick={()=>toggleStatus(m.id || m._id)} className={`text-xs font-medium px-3 py-1.5 rounded-lg transition ${m.status==='active'?'bg-gray-100 hover:bg-gray-200 text-gray-600':'bg-emerald-100 hover:bg-emerald-200 text-emerald-700'}`}>
+                      {m.status==='active'?'Deactivate':'Reactivate'}
+                    </button>
+                  ) : (
+                    <span className={`text-xs font-medium px-3 py-1.5 rounded-lg bg-gray-50 text-gray-400 inline-block`}>
+                      Status: {m.status==='active'?'Active':'Inactive'}
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="space-y-1.5 text-xs text-gray-500">
-                <p className="flex items-center gap-1.5"><Phone size={12}/>{m.phone}</p>
-                <p className="flex items-center gap-1.5"><Mail size={12}/>{m.email}</p>
-                <p className="flex items-center gap-1.5"><Shield size={12}/>{m.branch || m.branchName}</p>
-                {m.role==='installer' && <p className="flex items-center gap-1.5"><UserCheck size={12}/>{m.jobsCompleted} jobs completed</p>}
-              </div>
-              {m.notes && <p className="text-xs text-gray-400 italic mt-3 line-clamp-2">{m.notes}</p>}
-              <div className="mt-4 pt-3 border-t border-gray-100">
-                {!isReadOnly ? (
-                  <button onClick={()=>toggleStatus(m.id)} className={`text-xs font-medium px-3 py-1.5 rounded-lg transition ${m.status==='active'?'bg-gray-100 hover:bg-gray-200 text-gray-600':'bg-emerald-100 hover:bg-emerald-200 text-emerald-700'}`}>
-                    {m.status==='active'?'Deactivate':'Reactivate'}
-                  </button>
-                ) : (
-                  <span className={`text-xs font-medium px-3 py-1.5 rounded-lg bg-gray-50 text-gray-400 inline-block`}>
-                    Status: {m.status==='active'?'Active':'Inactive'}
-                  </span>
-                )}
-              </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4 mt-4">
+              <button
+                disabled={page === 1}
+                onClick={()=>setPage(p=>Math.max(1, p-1))}
+                className="px-3.5 py-1.5 rounded-lg border border-gray-300 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                Previous
+              </button>
+              <span className="text-xs text-gray-500 font-medium">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                disabled={page === totalPages}
+                onClick={()=>setPage(p=>Math.min(totalPages, p+1))}
+                className="px-3.5 py-1.5 rounded-lg border border-gray-300 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                Next
+              </button>
             </div>
-          ))}
+          )}
         </div>
       )}
 
@@ -279,8 +364,8 @@ export default function TeamPage() {
             )}
 
             <form onSubmit={handleSave}>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-600 mb-1">Full Name *</label><input required type="text" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} className={f}/></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div className="col-span-1 sm:col-span-2"><label className="block text-xs font-medium text-gray-600 mb-1">Full Name *</label><input required type="text" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} className={f}/></div>
                 <div><label className="block text-xs font-medium text-gray-600 mb-1">Email *</label><input required type="email" disabled={!!editing} value={form.email} onChange={e=>setForm(p=>({...p,email:e.target.value}))} className={f + (editing ? ' bg-gray-100 cursor-not-allowed' : '')}/></div>
                 <div><label className="block text-xs font-medium text-gray-600 mb-1">Phone</label><input type="tel" value={form.phone} onChange={e=>setForm(p=>({...p,phone:e.target.value}))} className={f}/></div>
                 <div><label className="block text-xs font-medium text-gray-600 mb-1">Role *</label>
@@ -298,7 +383,7 @@ export default function TeamPage() {
                   )}
                 </div>
 
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-600 mb-1">Notes</label><textarea rows={2} value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} className={f+' resize-none'}/></div>
+                <div className="col-span-1 sm:col-span-2"><label className="block text-xs font-medium text-gray-600 mb-1">Notes</label><textarea rows={2} value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} className={f+' resize-none'}/></div>
               </div>
               <div className="flex gap-3">
                 <button type="submit" disabled={saving} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold py-2.5 rounded-xl transition disabled:opacity-50">{saving?'Saving…':editing?'Update':'Add Member'}</button>

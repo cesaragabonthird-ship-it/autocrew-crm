@@ -25,6 +25,11 @@ export default function CustomersPage() {
   const [form, setForm]           = useState(EMPTY);
   const [saving, setSaving]       = useState(false);
   const [detail, setDetail]       = useState(null);
+  const [page, setPage]           = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   useEffect(() => {
     customersAPI.getAll().then(setCustomers).catch(()=>setCustomers(MOCK)).finally(()=>setLoading(false));
@@ -87,23 +92,30 @@ export default function CustomersPage() {
     !search || [c.name,c.phone,c.email,...(c.vehicles||[]).map(v=>`${v.make} ${v.model} ${v.plate}`)].some(s=>s?.toLowerCase().includes(search.toLowerCase()))
   );
 
-  return (
-    <div className="p-8">
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Customers</h1>
-          <p className="text-gray-500 mt-1 text-sm">{customers.length} customers · {customers.reduce((s,c)=>s+c.vehicles.length,0)} vehicles on record</p>
-        </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition">
-          <Plus size={17}/> Add Customer
-        </button>
-      </div>
+  const ITEMS_PER_PAGE = 10;
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated = filtered.slice((page-1)*ITEMS_PER_PAGE, page*ITEMS_PER_PAGE);
 
-      <div className="relative mb-5">
-        <Search size={15} className="absolute left-3 top-2.5 text-gray-400"/>
-        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name, phone, vehicle, plate number…"
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"/>
-        {search && <button onClick={()=>setSearch('')} className="absolute right-3 top-3 text-gray-400"><X size={15}/></button>}
+  return (
+    <div className="p-4 md:p-8">
+      {/* Sticky Header & Search Container */}
+      <div className="sticky top-0 bg-gray-50/95 backdrop-blur-sm z-10 -mx-4 md:-mx-8 px-4 md:px-8 pt-2 pb-4 border-b border-gray-200/60 mb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Customers</h1>
+            <p className="text-gray-500 mt-1 text-sm">{customers.length} customers · {customers.reduce((s,c)=>s+c.vehicles.length,0)} vehicles on record</p>
+          </div>
+          <button onClick={openAdd} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition">
+            <Plus size={17}/> Add Customer
+          </button>
+        </div>
+
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-3 sm:top-2.5 text-gray-400"/>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name, phone, vehicle, plate number…"
+            className="w-full pl-9 pr-8 py-2.5 sm:py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"/>
+          {search && <button onClick={()=>setSearch('')} className="absolute right-3 top-3 sm:top-2.5 text-gray-400"><X size={14}/></button>}
+        </div>
       </div>
 
       {loading ? <div className="flex justify-center py-20"><div className="animate-spin h-8 w-8 border-b-2 border-orange-500 rounded-full"/></div> : (
@@ -111,51 +123,154 @@ export default function CustomersPage() {
           {filtered.length===0 ? (
             <div className="py-16 text-center"><Users size={40} className="mx-auto text-gray-300 mb-3"/><p className="text-gray-500 text-sm">No customers found</p></div>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  {['Customer','Contact','Vehicles','Jobs','Spent','Last Visit',''].map(h=>(
-                    <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filtered.map(c => (
-                  <tr key={c._id || c.id} className="hover:bg-gray-50 transition cursor-pointer" onClick={()=>setDetail(c)}>
-                    <td className="px-5 py-3">
+            <div>
+              {/* Mobile Card List View */}
+              <div className="divide-y divide-gray-100 md:hidden">
+                {paginated.map(c => (
+                  <div
+                    key={c._id || c.id}
+                    className="p-4 hover:bg-gray-50 active:bg-gray-100 transition cursor-pointer flex flex-col gap-2"
+                    onClick={() => setDetail(c)}
+                  >
+                    <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-sm flex-shrink-0">{c.name.charAt(0)}</div>
-                        <div><p className="text-sm font-semibold text-gray-900">{c.name}</p><p className="text-xs text-gray-400 flex items-center gap-1"><MapPin size={11}/>{c.address}</p></div>
+                        <div className="h-9 w-9 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                          {c.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">{c.name}</p>
+                          {c.address && (
+                            <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                              <MapPin size={11} /> {c.address}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </td>
-                    <td className="px-5 py-3">
-                      <div className="space-y-0.5">
-                        <p className="text-xs text-gray-600 flex items-center gap-1"><Phone size={11}/>{c.phone}</p>
-                        {c.email && <p className="text-xs text-gray-600 flex items-center gap-1"><Mail size={11}/>{c.email}</p>}
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-xs font-semibold text-gray-900">₱{c.totalSpent.toLocaleString()}</p>
+                        <p className="text-[10px] text-gray-400 font-medium mt-0.5">{c.jobsCount} jobs</p>
                       </div>
-                    </td>
-                    <td className="px-5 py-3">
-                      <div className="space-y-0.5">
-                        {c.vehicles.slice(0,2).map((v,i)=>(
-                          <p key={i} className="text-xs text-gray-700 flex items-center gap-1"><Car size={11} className="text-orange-400"/>{v.year} {v.make} {v.model}</p>
-                        ))}
-                        {c.vehicles.length>2 && <p className="text-xs text-gray-400">+{c.vehicles.length-2} more</p>}
+                    </div>
+
+                    <div className="flex flex-col gap-1.5 text-xs text-gray-500 border-t border-gray-100/60 pt-2.5 mt-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="flex items-center gap-1"><Phone size={11} /> {c.phone}</span>
+                        {c.email && (
+                          <>
+                            <span className="text-gray-300">•</span>
+                            <span className="flex items-center gap-1"><Mail size={11} /> {c.email}</span>
+                          </>
+                        )}
                       </div>
-                    </td>
-                    <td className="px-5 py-3"><span className="bg-orange-50 text-orange-700 text-xs font-medium px-2.5 py-1 rounded-full">{c.jobsCount}</span></td>
-                    <td className="px-5 py-3 text-sm font-semibold text-gray-900">₱{c.totalSpent.toLocaleString()}</td>
-                    <td className="px-5 py-3 text-xs text-gray-500 flex items-center gap-1 mt-3"><Clock size={11}/>{c.lastVisit}</td>
-                    <td className="px-5 py-3" onClick={e=>e.stopPropagation()}>
-                      <div className="flex items-center gap-1">
-                        <button onClick={()=>openEdit(c)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700"><Edit2 size={14}/></button>
-                        <button onClick={()=>handleDelete(c._id || c.id)} className="p-1.5 hover:bg-red-50 rounded-md text-gray-400 hover:text-red-600"><Trash2 size={14}/></button>
-                        <button onClick={()=>setDetail(c)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400"><ChevronRight size={14}/></button>
+                      
+                      {c.vehicles && c.vehicles.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {c.vehicles.slice(0, 2).map((v, i) => (
+                            <span key={i} className="text-[11px] bg-gray-50 text-gray-600 px-2 py-0.5 rounded-lg flex items-center gap-1 border border-gray-100/50">
+                              <Car size={10} className="text-orange-400" />
+                              {v.year} {v.make} {v.model}
+                            </span>
+                          ))}
+                          {c.vehicles.length > 2 && (
+                            <span className="text-[11px] text-gray-400 font-medium flex-shrink-0">
+                              +{c.vehicles.length - 2} more
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2.5 mt-1 border-t border-gray-100/60">
+                      <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                        <Clock size={10} /> Last visit: {c.lastVisit || 'N/A'}
+                      </span>
+                      <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => openEdit(c)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition">
+                          <Edit2 size={13} />
+                        </button>
+                        <button onClick={() => handleDelete(c._id || c.id)} className="p-1.5 hover:bg-rose-50 rounded-md text-gray-400 hover:text-rose-600 transition">
+                          <Trash2 size={13} />
+                        </button>
+                        <button onClick={() => setDetail(c)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition">
+                          <ChevronRight size={15} />
+                        </button>
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full min-w-[800px] md:min-w-0">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      {['Customer','Contact','Vehicles','Jobs','Spent','Last Visit',''].map(h=>(
+                        <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {paginated.map(c => (
+                      <tr key={c._id || c.id} className="hover:bg-gray-50 transition cursor-pointer" onClick={()=>setDetail(c)}>
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-sm flex-shrink-0">{c.name.charAt(0)}</div>
+                            <div><p className="text-sm font-semibold text-gray-900">{c.name}</p><p className="text-xs text-gray-400 flex items-center gap-1"><MapPin size={11}/>{c.address}</p></div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3">
+                          <div className="space-y-0.5">
+                            <p className="text-xs text-gray-600 flex items-center gap-1"><Phone size={11}/>{c.phone}</p>
+                            {c.email && <p className="text-xs text-gray-600 flex items-center gap-1"><Mail size={11}/>{c.email}</p>}
+                          </div>
+                        </td>
+                        <td className="px-5 py-3">
+                          <div className="space-y-0.5">
+                            {c.vehicles.slice(0,2).map((v,i)=>(
+                              <p key={i} className="text-xs text-gray-700 flex items-center gap-1"><Car size={11} className="text-orange-400"/>{v.year} {v.make} {v.model}</p>
+                            ))}
+                            {c.vehicles.length>2 && <p className="text-xs text-gray-400">+{c.vehicles.length-2} more</p>}
+                          </div>
+                        </td>
+                        <td className="px-5 py-3"><span className="bg-orange-50 text-orange-700 text-xs font-medium px-2.5 py-1 rounded-full">{c.jobsCount}</span></td>
+                        <td className="px-5 py-3 text-sm font-semibold text-gray-900">₱{c.totalSpent.toLocaleString()}</td>
+                        <td className="px-5 py-3 text-xs text-gray-500 flex items-center gap-1 mt-3"><Clock size={11}/>{c.lastVisit}</td>
+                        <td className="px-5 py-3" onClick={e=>e.stopPropagation()}>
+                          <div className="flex items-center gap-1">
+                            <button onClick={()=>openEdit(c)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition"><Edit2 size={14}/></button>
+                            <button onClick={()=>handleDelete(c._id || c.id)} className="p-1.5 hover:bg-rose-50 rounded-md text-gray-400 hover:text-rose-600 transition"><Trash2 size={14}/></button>
+                            <button onClick={()=>setDetail(c)} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-gray-700 transition"><ChevronRight size={15}/></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between border-t border-gray-100 p-4">
+                  <button
+                    disabled={page === 1}
+                    onClick={()=>setPage(p=>Math.max(1, p-1))}
+                    className="px-3.5 py-1.5 rounded-lg border border-gray-300 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-xs text-gray-500 font-medium">
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    disabled={page === totalPages}
+                    onClick={()=>setPage(p=>Math.min(totalPages, p+1))}
+                    className="px-3.5 py-1.5 rounded-lg border border-gray-300 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}

@@ -270,14 +270,14 @@ export default function RunsTab() {
   return (
     <div>
       {/* Subheader */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Completed Payroll Runs</h2>
           <p className="text-xs text-gray-500">Run and finalize payroll periods. Generate payslips dynamically.</p>
         </div>
         <button
           onClick={handleStartWizard}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-4 py-2 rounded-xl transition"
+          className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition w-full sm:w-auto"
         >
           <Plus size={14} /> Run Payroll
         </button>
@@ -296,20 +296,20 @@ export default function RunsTab() {
       ) : (
         <div className="space-y-3">
           {runs.map(run => (
-            <div key={run.id || run._id} className="bg-white border border-gray-200 p-5 rounded-xl flex items-center justify-between hover:shadow-sm transition">
+            <div key={run.id || run._id} className="bg-white border border-gray-200 p-4 md:p-5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-sm transition">
               <div>
                 <p className="font-bold text-gray-950 text-sm">{run.period}</p>
-                <p className="text-xs text-gray-500">Paid on: {run.date} • {run.employees} Employees</p>
+                <p className="text-xs text-gray-500 mt-0.5">Paid on: {run.date} • {run.employees} Employees</p>
                 {run.notes && <p className="text-xs text-gray-400 mt-1 italic">Notes: {run.notes}</p>}
               </div>
-              <div className="flex items-center gap-6">
-                <div className="text-right">
-                  <p className="text-xs text-gray-400">Total Net Payout</p>
+              <div className="flex items-center justify-between sm:justify-end gap-6 border-t border-gray-100 pt-3 sm:border-0 sm:pt-0">
+                <div className="text-left sm:text-right">
+                  <p className="text-[10px] text-gray-400 uppercase font-semibold">Total Net Payout</p>
                   <p className="text-base font-bold text-emerald-700">₱{run.netPay.toLocaleString()}</p>
                 </div>
                 <button
                   onClick={() => handleOpenDetails(run)}
-                  className="flex items-center gap-1.5 border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-semibold px-3 py-1.5 rounded-lg transition"
+                  className="flex items-center gap-1.5 border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-semibold px-3 py-1.5 rounded-lg transition shadow-sm"
                 >
                   <Eye size={13} /> View Slips
                 </button>
@@ -322,7 +322,7 @@ export default function RunsTab() {
       {/* Run Details Modal / Payslips list */}
       {viewRunDetails && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setViewRunDetails(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-4 md:p-6 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Payroll Run Details</h2>
@@ -452,7 +452,7 @@ export default function RunsTab() {
       {/* Individual Payslip Modal */}
       {activePayslip && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setActivePayslip(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative print:p-0 print:shadow-none print:inset-0 print:absolute" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-4 md:p-6 relative print:p-0 print:shadow-none print:inset-0 print:absolute" onClick={e => e.stopPropagation()}>
             {/* Modal Controls */}
             <div className="flex justify-between items-center mb-6 print:hidden">
               <h3 className="font-bold text-gray-900">Payslip Preview</h3>
@@ -548,7 +548,7 @@ export default function RunsTab() {
 
             {wizardStep === 1 ? (
               <div className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Period Start</label>
                     <input type="date" value={periodStart} onChange={e => setPeriodStart(e.target.value)} className={f} />
@@ -629,21 +629,21 @@ export default function RunsTab() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-3">
+                <div className="flex flex-col-reverse sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setWizardStep(1)}
+                    className="w-full sm:flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-2.5 rounded-xl transition"
+                  >
+                    Back to Setup
+                  </button>
                   <button
                     type="button"
                     onClick={handleSaveRun}
                     disabled={saving}
-                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold py-2.5 rounded-xl transition"
+                    className="w-full sm:flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold py-2.5 rounded-xl transition"
                   >
                     {saving ? 'Finalizing…' : 'Finalize & Save Run'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setWizardStep(1)}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-2.5 rounded-xl transition"
-                  >
-                    Back to Setup
                   </button>
                 </div>
               </div>

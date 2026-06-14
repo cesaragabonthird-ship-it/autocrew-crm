@@ -35,7 +35,7 @@ export default function OnboardingPage() {
   // If already linked to a tenant, redirect away from onboarding
   if (profile?.tenantId) {
     if (profile.role === 'installer') {
-      router.replace('/installer');
+      router.replace('/portal?tab=jobs');
     } else {
       router.replace('/dashboard');
     }

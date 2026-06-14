@@ -35,13 +35,13 @@ const MOCK = {
 
 function StatCard({ label, value, sub, icon: Icon, href, alert }) {
   const inner = (
-    <div className={`bg-white rounded-xl border p-5 h-full transition ${href?'hover:shadow-md hover:border-orange-200 cursor-pointer':''} ${alert?'border-red-200':'border-gray-200'}`}>
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</p>
-        <div className="text-black"><Icon size={18}/></div>
+    <div className={`bg-white rounded-xl border p-4 sm:p-5 h-full transition ${href?'hover:shadow-md hover:border-orange-200 cursor-pointer':''} ${alert?'border-red-200':'border-gray-200'}`}>
+      <div className="flex items-center justify-between mb-2 sm:mb-3">
+        <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider truncate">{label}</p>
+        <div className="text-gray-400 sm:text-black flex-shrink-0"><Icon size={16}/></div>
       </div>
-      <p className="text-3xl font-bold text-gray-900 mb-0.5">{value}</p>
-      {sub && <p className={`text-xs ${alert?'text-red-500 font-medium':'text-gray-400'}`}>{sub}</p>}
+      <p className="text-xl sm:text-3xl font-bold text-gray-900 mb-0.5">{value}</p>
+      {sub && <p className={`text-[10px] sm:text-xs truncate ${alert?'text-red-500 font-medium':'text-gray-400'}`}>{sub}</p>}
     </div>
   );
   return href ? <Link href={href}>{inner}</Link> : inner;
@@ -107,21 +107,22 @@ export default function DashboardHome() {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+    <div className="p-4 md:p-8">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            {greeting()}{profile?.name?`, ${profile.name.split(' ')[0]}`:''}  👋
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+            <span>{greeting()}{profile?.name?`, ${profile.name.split(' ')[0]}`:''}</span>
+            <span className="inline-block hover:animate-bounce select-none">👋</span>
           </h1>
-          <p className="text-gray-500 mt-1 text-sm">
+          <p className="text-gray-500 mt-1 text-xs sm:text-sm">
             {profile?.branchName || 'All Branches'} · {new Date().toLocaleDateString('en-PH',{weekday:'long',month:'long',day:'numeric'})}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard/invoices?new=shop" className="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-700 hover:bg-sky-100 transition">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Link href="/dashboard/invoices?new=shop" className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5 text-sm font-medium text-sky-700 hover:bg-sky-100 transition shadow-sm">
             <ShoppingCart size={15}/> Walk-in Sale
           </Link>
-          <Link href="/dashboard/invoices" className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-3 py-2 text-sm font-medium text-white hover:bg-orange-600 transition">
+          <Link href="/dashboard/invoices" className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-3 py-2.5 text-sm font-medium text-white hover:bg-orange-600 transition shadow-sm">
             <DollarSign size={15}/> Invoices
           </Link>
         </div>
@@ -134,12 +135,12 @@ export default function DashboardHome() {
           {/* Alert row */}
           {s.lowStockItems > 0 && (
             <Link href="/dashboard/inventory?filter=low_stock">
-              <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-5 py-3 mb-6 hover:bg-red-100 transition">
+              <div className="flex items-center gap-3 bg-red-50 border border-red-200/60 rounded-xl px-4 py-3 mb-6 hover:bg-red-100 transition shadow-sm">
                 <AlertTriangle size={17} className="text-red-500 flex-shrink-0"/>
-                <p className="text-sm font-medium text-red-700">
+                <p className="text-xs sm:text-sm font-medium text-red-700">
                   {s.lowStockItems} product{s.lowStockItems!==1?'s':''} are running low on stock
                 </p>
-                <span className="ml-auto text-xs text-red-500 font-semibold">View →</span>
+                <span className="ml-auto text-xs text-red-500 font-semibold flex-shrink-0">View →</span>
               </div>
             </Link>
           )}
@@ -155,25 +156,25 @@ export default function DashboardHome() {
           {/* Charts row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
             {/* Weekly revenue bar chart */}
-            <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6">
+            <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-sm font-semibold text-gray-900">This Week's Revenue</h2>
                 <span className="text-xs text-gray-400">{fmt(s.weeklyJobsData?.reduce((a,d)=>a+d.revenue,0)||0)} total</span>
               </div>
-              <div className="flex items-end gap-2 h-36">
+              <div className="flex items-end gap-1.5 sm:gap-2 h-36">
                 {(s.weeklyJobsData||[]).map((d,i) => (
                   <div key={d.day} className="flex-1 flex flex-col items-center gap-1.5">
-                    <span className="text-xs text-gray-400">{d.revenue>0?fmt(d.revenue):''}</span>
-                    <div className="w-full bg-orange-500 rounded-t-md transition-all"
-                      style={{height:`${Math.max(4,(d.revenue/maxRev)*120)}px`,opacity:0.6+0.4*(d.revenue/maxRev)}}/>
-                    <span className="text-xs text-gray-400">{d.day}</span>
+                    <span className="text-[10px] sm:text-xs text-gray-400 truncate">{d.revenue>0?fmt(d.revenue):''}</span>
+                    <div className="w-full bg-gradient-to-t from-orange-600 to-orange-400 rounded-t-md transition-all duration-300"
+                      style={{height:`${Math.max(4,(d.revenue/maxRev)*120)}px`,opacity:0.75+0.25*(d.revenue/maxRev)}}/>
+                    <span className="text-[10px] sm:text-xs text-gray-400">{d.day}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Job status breakdown */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
               <h2 className="text-sm font-semibold text-gray-900 mb-5">Job Status</h2>
               <div className="space-y-4">
                 {[
@@ -213,14 +214,14 @@ export default function DashboardHome() {
           {/* Recent jobs + Top products */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {/* Recent jobs */}
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+              <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-gray-200">
                 <p className="text-sm font-semibold text-gray-900">Recent Jobs</p>
                 <Link href="/dashboard/job-orders" className="text-xs text-orange-500 font-medium hover:underline">View all →</Link>
               </div>
               <div className="divide-y divide-gray-100">
                 {(s.recentJobs||[]).map(job => (
-                  <div key={job.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition">
+                  <div key={job.id} className="flex items-center gap-2.5 px-4 sm:px-5 py-3 hover:bg-gray-50 transition">
                     <div className="h-9 w-9 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-sm flex-shrink-0">
                       {job.customer.charAt(0)}
                     </div>
@@ -240,8 +241,8 @@ export default function DashboardHome() {
             </div>
 
             {/* Top products */}
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden relative">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden relative shadow-sm">
+              <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-gray-200">
                 <p className="text-sm font-semibold text-gray-900">Top Selling Products</p>
                 {profile?.plan !== 'starter' && (
                   <Link href="/dashboard/reports" className="text-xs text-orange-500 font-medium hover:underline">View report →</Link>
@@ -249,7 +250,7 @@ export default function DashboardHome() {
               </div>
               <div className={`divide-y divide-gray-100 ${profile?.plan === 'starter' ? 'blur-[6px] select-none pointer-events-none' : ''}`}>
                 {(s.topProducts||[]).map((prod,i) => (
-                  <div key={prod.name} className="flex items-center gap-3 px-5 py-3">
+                  <div key={prod.name} className="flex items-center gap-2.5 px-4 sm:px-5 py-3">
                     <div className="h-7 w-7 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
                       {i+1}
                     </div>
@@ -280,7 +281,7 @@ export default function DashboardHome() {
           </div>
           {/* Feature Roadmap Widget (Growth & Pro only) */}
           {profile && ['growth', 'pro'].includes(profile.plan) && (
-            <div className="mt-6 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200/60 rounded-xl p-6 shadow-sm">
+            <div className="mt-6 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200/60 rounded-xl p-4 sm:p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-500 text-white flex-shrink-0">
                   <Rocket size={16} />
